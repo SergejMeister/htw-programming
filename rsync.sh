@@ -1,0 +1,1 @@
+rsync --delete -avzbe ssh sXXXXXX@uranus.f4.htw-berlin.de:"/share/lehrende/Baumeister/Master\ Programming/code" "."
