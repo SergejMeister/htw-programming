@@ -2,10 +2,12 @@ package com.htw.master.prog.broker.model;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
@@ -16,6 +18,8 @@ import java.util.Optional;
 /**
  * Entity Auction.
  */
+@Table(name = "Auction")
+@Entity
 public class Auction extends BaseEntity {
 
     @OneToMany(mappedBy = "auction")

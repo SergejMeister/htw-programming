@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -19,7 +20,7 @@ import java.util.Date;
 @Table(name = "BaseEntity")
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "discriminator")
-public abstract class BaseEntity implements Comparable {
+public abstract class BaseEntity implements Comparable, Serializable {
 
     @Id
     @GeneratedValue

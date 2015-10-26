@@ -1,7 +1,7 @@
 package com.htw.master.prog.broker.enums;
 
 /**
- * Created by Sergej Meister on 10/16/15.
+ * Enum - Group.
  */
 public enum Group {
 

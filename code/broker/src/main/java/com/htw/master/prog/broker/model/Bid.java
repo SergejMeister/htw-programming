@@ -4,11 +4,13 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 /**
  * Bid entity.
  */
+@Table(name = "Bid")
 @Entity
 public class Bid extends BaseEntity {
 

@@ -12,6 +12,14 @@
         <module>broker</module>
     </modules>
 
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <directory>target</directory>
         <outputDirectory>target/classes</outputDirectory>
