@@ -1,4 +1,4 @@
-package com.htw.master.prog.broker.dao.impl;
+package com.htw.master.prog.broker.dao.beans;
 
 import com.htw.master.prog.broker.dao.GenericDao;
 
@@ -8,17 +8,18 @@ import javax.persistence.Query;
 import java.io.Serializable;
 import java.util.List;
 
-public abstract class GenericDaoImpl<T extends Serializable> implements GenericDao<T> {
+public abstract class GenericDaoBean<T extends Serializable> implements GenericDao<T> {
 
     private Class<T> clazz;
 
-    @PersistenceContext
+    @PersistenceContext(name = "broker")
     private EntityManager entityManager;
 
-    public GenericDaoImpl() {
+    @SuppressWarnings("unchecked")
+    public GenericDaoBean() {
     }
 
-    public GenericDaoImpl(Class<T> clazz) {
+    public GenericDaoBean(Class<T> clazz) {
         setClazz(clazz);
     }
 
@@ -42,7 +43,6 @@ public abstract class GenericDaoImpl<T extends Serializable> implements GenericD
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
     public List<T> findAll() {
         return getEntityManager().createQuery("from " + clazz.getName()).getResultList();
     }

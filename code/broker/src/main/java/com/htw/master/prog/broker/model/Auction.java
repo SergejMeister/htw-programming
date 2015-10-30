@@ -1,15 +1,15 @@
 package com.htw.master.prog.broker.model;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
@@ -20,6 +20,7 @@ import java.util.Optional;
  */
 @Table(name = "Auction")
 @Entity
+@PrimaryKeyJoinColumn(name = "auctionIdentity")
 public class Auction extends BaseEntity {
 
     @OneToMany(mappedBy = "auction")
@@ -29,9 +30,11 @@ public class Auction extends BaseEntity {
     private String title;
 
     @NotNull
+    @Min(0)
     private Integer unitCount;
 
     @NotNull
+    @Min(0)
     private Double askingPrice;
 
     @NotNull
@@ -111,12 +114,10 @@ public class Auction extends BaseEntity {
     }
 
     public boolean isClosed() {
-        //TODO: Question: if auction is sealed -> it's closed too?
-        return new Date().after(closureTimestamp);
+        return new Date().after(closureTimestamp) || isSealed();
     }
 
     public boolean isSealed() {
-        //TODO sealed if unitCount 0 ???
-        throw new NotImplementedException();
+        return unitCount <= 0;
     }
 }

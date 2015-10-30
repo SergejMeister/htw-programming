@@ -1,10 +1,12 @@
 package com.htw.master.prog.broker.model;
 
+import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 
 /**
  * Address model.
  */
+@Embeddable
 public class Address {
 
     private String street;
@@ -12,6 +14,7 @@ public class Address {
     private String postCode;
 
     @NotNull
+
     private String city;
 
     public String getStreet() {

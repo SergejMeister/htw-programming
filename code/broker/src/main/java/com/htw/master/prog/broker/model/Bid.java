@@ -4,7 +4,9 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -12,17 +14,21 @@ import javax.validation.constraints.NotNull;
  */
 @Table(name = "Bid")
 @Entity
+@PrimaryKeyJoinColumn(name = "bidIdentity")
 public class Bid extends BaseEntity {
 
     @NotNull
+    @Min(0)
     private Double price;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "auctionReference")
+    @NotNull
     private Auction auction;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bidderReference")
+    @NotNull
     private Person bidder;
 
     public Double getPrice() {

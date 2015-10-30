@@ -9,7 +9,9 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.OneToMany;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.List;
  */
 @Table(name = "Person")
 @Entity
+@PrimaryKeyJoinColumn(name = "personIdentity")
 public class Person extends BaseEntity {
 
     @OneToMany(mappedBy = "seller")
@@ -37,12 +40,15 @@ public class Person extends BaseEntity {
     private Group group;
 
     @Embedded
+    @Valid
     private Name name;
 
     @Embedded
+    @Valid
     private Address address;
 
     @Embedded
+    @Valid
     private Contact contact;
 
     public Person() {
