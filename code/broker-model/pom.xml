@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>broker-group</artifactId>
+        <groupId>com.htw.master</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>broker-model</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!--EclipseLink required for @CacheIndex annotation-->
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.htw.master</groupId>
+            <artifactId>broker-group</artifactId>
+            <version>${project.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../libs/java-util-1.1.3.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+</project>
