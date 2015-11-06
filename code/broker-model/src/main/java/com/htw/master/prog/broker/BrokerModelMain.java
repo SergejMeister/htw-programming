@@ -26,6 +26,7 @@ public class BrokerModelMain {
 
     public void run() {
         LOG.info("Start broker model ...");
+
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         CriteriaQuery<Bid> bidCriteriaQuery = entityManager.getCriteriaBuilder().createQuery(Bid.class);
