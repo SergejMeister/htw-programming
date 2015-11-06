@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,7 +26,8 @@ import java.util.Set;
 @Table(schema = "broker", name = "Auction")
 @Entity
 @PrimaryKeyJoinColumn(name = "auctionIdentity")
-@Inequal(operator=Inequal.Operator.GREATER, leftAccessPath = { "closureTimestamp" }, rightAccessPath = {"creationTimestamp"})
+@Inequal(operator = Inequal.Operator.GREATER, leftAccessPath = { "closureTimestamp" }, rightAccessPath = {
+    "creationTimestamp" })
 public class Auction extends BaseEntity {
 
     @OneToMany(mappedBy = "auction")
@@ -117,7 +117,7 @@ public class Auction extends BaseEntity {
     }
 
     public long getSellerReference() {
-        return seller.getIdentity();
+        return seller == null ? 0 : seller.getIdentity();
     }
 
     public Set<Bid> getBids() {
@@ -129,8 +129,14 @@ public class Auction extends BaseEntity {
     }
 
     public Bid getBid(Person person) {
-        Optional<Bid> result = bids.stream().filter(bid -> bid.getBidder().compareTo(person) == 0).findFirst();
-        return result.isPresent() ? result.get() : null;
+        for (Bid bid : bids) {
+            if (bid.getBidder().compareTo(person) == 0) {
+                return bid;
+            }
+        }
+        //Optional<Bid> result = bids.stream().filter(bid -> bid.getBidder().compareTo(person) == 0).findFirst();
+        //        return result.isPresent() ? result.get() : null;
+        return null;
     }
 
     public boolean isClosed() {

@@ -51,6 +51,7 @@ public class BrokerModelMain {
         for (Auction auction : auctions) {
             LOG.info("Auction identity: " + auction.getIdentity());
             LOG.info("Auction title: " + auction.getTitle());
+            LOG.info("Auction closure timestamp: " + auction.getClosureTimestamp());
         }
 
         LOG.info("Finish broker model");
