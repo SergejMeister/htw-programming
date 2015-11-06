@@ -52,7 +52,7 @@ public class Auction extends BaseEntity {
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "auctionReference")
+    @JoinColumn(name = "sellerReference")
     private Person seller;
 
     public Auction() {
