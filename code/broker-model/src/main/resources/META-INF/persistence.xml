@@ -2,8 +2,8 @@
 <persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.1"
              xmlns="http://xmlns.jcp.org/xml/ns/persistence"
              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
-    <!--<persistence-unit name="broker" transaction-type="RESOURCE_LOCAL">-->
-    <persistence-unit name="broker">
+    <persistence-unit name="broker" transaction-type="RESOURCE_LOCAL">
+    <!--<persistence-unit name="broker">-->
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <!-- non-jta-data-source>JNDI-name in Java EE</non-jta-data-source -->
 

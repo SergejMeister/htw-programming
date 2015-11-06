@@ -44,4 +44,12 @@ public class Name {
     public void setGiven(String given) {
         this.given = given;
     }
+
+    @Override
+    public String toString() {
+        return "Name{" +
+            "family='" + family + '\'' +
+            ", given='" + given + '\'' +
+            '}';
+    }
 }
