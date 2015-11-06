@@ -9,8 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -35,12 +33,12 @@ public abstract class BaseEntity implements Comparable, Serializable {
     private int version;
 
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
+    //@Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false, insertable = true)
-    private Date creationTimestamp;
+    private Long creationTimestamp;
 
     protected BaseEntity() {
-        this.creationTimestamp = new Date();
+        this.creationTimestamp = new Date().getTime();
     }
 
     /**
@@ -68,6 +66,6 @@ public abstract class BaseEntity implements Comparable, Serializable {
     }
 
     public Date getCreationTimestamp() {
-        return creationTimestamp;
+        return new Date(creationTimestamp);
     }
 }

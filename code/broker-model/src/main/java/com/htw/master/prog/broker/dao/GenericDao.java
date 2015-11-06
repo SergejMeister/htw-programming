@@ -23,7 +23,7 @@ public interface GenericDao<T extends Serializable> {
      *
      * @param entity entity
      */
-     void create(final T entity);
+    void create(final T entity);
 
     /**
      * find all entities.
@@ -36,9 +36,8 @@ public interface GenericDao<T extends Serializable> {
      * update an entity.
      *
      * @param entity the entity you want to update
-     * @return the updated entity
      */
-    T update(final T entity);
+    void update(final T entity);
 
     /**
      * find an entity by its id.

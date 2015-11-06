@@ -11,8 +11,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -50,9 +48,9 @@ public class Auction extends BaseEntity {
     private double askingPrice;
 
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
+    //@Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = true)
-    private Date closureTimestamp;
+    private Long closureTimestamp;
 
     @NotNull
     @Column(nullable = false, updatable = true)
@@ -61,6 +59,7 @@ public class Auction extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sellerReference", nullable = false, updatable = false, insertable = true)
+    @NotNull
     private Person seller;
 
     public Auction() {
@@ -101,11 +100,11 @@ public class Auction extends BaseEntity {
     }
 
     public Date getClosureTimestamp() {
-        return closureTimestamp;
+        return new Date(closureTimestamp);
     }
 
     public void setClosureTimestamp(Date closureTimestamp) {
-        this.closureTimestamp = closureTimestamp;
+        this.closureTimestamp = closureTimestamp.getTime();
     }
 
     public String getDescription() {
@@ -141,7 +140,7 @@ public class Auction extends BaseEntity {
     }
 
     public boolean isClosed() {
-        return new Date().after(closureTimestamp) || isSealed();
+        return new Date().after(getClosureTimestamp()) || isSealed();
     }
 
     public boolean isSealed() {

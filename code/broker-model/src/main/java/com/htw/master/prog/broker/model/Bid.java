@@ -11,6 +11,7 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 /**
  * Bid entity.
@@ -30,10 +31,12 @@ public class Bid extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "auctionReference", nullable = false, updatable = false, insertable = true)
+    @NotNull
     private Auction auction;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bidderReference", nullable = false, updatable = false, insertable = true)
+    @NotNull
     private Person bidder;
 
     protected Bid() {
@@ -41,7 +44,7 @@ public class Bid extends BaseEntity {
     }
 
     public Bid(Auction auction, Person bidder) {
-        setPrice(1);
+        setPrice(1.0);
         this.auction = auction;
         this.bidder = bidder;
     }

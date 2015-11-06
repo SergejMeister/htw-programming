@@ -10,16 +10,17 @@ import java.security.NoSuchAlgorithmException;
 public final class HashUtility {
 
     private static final String SHA_512 = "SHA-512";
+    private static final String SHA_1 = "SHA-1";
 
     private HashUtility() {
     }
 
     public static String hashAsString(String plain) {
-        return hash(plain, SHA_512);
+        return hash(plain, SHA_1);
     }
 
     public static byte[] hashAsByte(String plain) {
-        return hashToByte(plain, SHA_512);
+        return hashToByte(plain, SHA_1);
     }
 
     public static String hash(String plain, String algorithm) {
