@@ -11,7 +11,6 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 /**
  * Bid entity.
@@ -25,19 +24,16 @@ import javax.validation.constraints.NotNull;
 //@Inequal(operator=Inequal.Operator.GREATER_EQUAL, leftAccessPath = { "price" }, rightAccessPath = {"auction", "askingPrice"})
 public class Bid extends BaseEntity {
 
-    @NotNull
-    @Min(0)
-    @Column
-    private Double price;
+    @Min(1)
+    @Column(nullable = false, updatable = true)
+    private double price;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "auctionReference")
-    @NotNull
+    @JoinColumn(name = "auctionReference", nullable = false, updatable = false, insertable = true)
     private Auction auction;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bidderReference")
-    @NotNull
+    @JoinColumn(name = "bidderReference", nullable = false, updatable = false, insertable = true)
     private Person bidder;
 
     protected Bid() {
@@ -45,29 +41,21 @@ public class Bid extends BaseEntity {
     }
 
     public Bid(Auction auction, Person bidder) {
-        this(1.0, auction, bidder);
+        setPrice(1);
+        this.auction = auction;
+        this.bidder = bidder;
     }
 
-    public Bid(Double price, Auction auction, Person bidder) {
-        setPrice(price);
-        setAuction(auction);
-        setBidder(bidder);
-    }
-
-    public Double getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
     public Auction getAuction() {
         return auction;
-    }
-
-    public void setAuction(Auction auction) {
-        this.auction = auction;
     }
 
     public long getAuctionReference() {
@@ -76,10 +64,6 @@ public class Bid extends BaseEntity {
 
     public Person getBidder() {
         return bidder;
-    }
-
-    public void setBidder(Person bidder) {
-        this.bidder = bidder;
     }
 
     public long getBidderReference() {

@@ -14,22 +14,26 @@ public final class HashUtility {
     private HashUtility() {
     }
 
-    public static String hashAsString(String plain) throws NoSuchAlgorithmException {
+    public static String hashAsString(String plain) {
         return hash(plain, SHA_512);
     }
 
-    public static byte[] hashAsByte(String plain) throws NoSuchAlgorithmException {
+    public static byte[] hashAsByte(String plain) {
         return hashToByte(plain, SHA_512);
     }
 
-    public static String hash(String plain, String algorithm) throws NoSuchAlgorithmException {
+    public static String hash(String plain, String algorithm) {
         byte[] hash = hashToByte(plain, algorithm);
         return byteHashToHexString(hash);
     }
 
-    private static byte[] hashToByte(String value, String algorithm) throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance(algorithm);
-        return md.digest(value.getBytes());
+    private static byte[] hashToByte(String value, String algorithm) {
+        try {
+            MessageDigest md = MessageDigest.getInstance(algorithm);
+            return md.digest(value.getBytes());
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalArgumentException();
+        }
     }
 
     private static String byteHashToHexString(byte[] hash) {

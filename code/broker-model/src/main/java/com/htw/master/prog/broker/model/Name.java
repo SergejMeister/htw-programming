@@ -11,14 +11,14 @@ import javax.validation.constraints.Size;
 @Embeddable
 public class Name {
 
-    @Column(name = "familyName")
+    @Column(name = "familyName", nullable = false, updatable = true)
     @NotNull
-    @Size(min = 2, max = 200, message = "An event's family name must contain between 2 and 200 characters.")
+    @Size(min = 1, max = 31, message = "An event's family name must contain between 1 and 31 characters.")
     private String family;
 
-    @Column(name = "givenName")
+    @Column(name = "givenName", nullable = false, updatable = true)
     @NotNull
-    @Size(min = 2, max = 200, message = "An event's given name must contain between 2 and 200 characters.")
+    @Size(min = 1, max = 31, message = "An event's given name must contain between 1 and 31 characters.")
     private String given;
 
     protected Name() {

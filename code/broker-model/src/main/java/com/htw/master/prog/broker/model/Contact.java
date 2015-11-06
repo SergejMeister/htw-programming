@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 /**
  * Contact model.
@@ -15,10 +16,12 @@ public class Contact {
 
     @NotNull
     @Pattern(regexp = MAIL_PATTERN, message = "{invalid.email}")
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, updatable = true)
+    @Size(min = 1, max = 63, message = "An event's email must contain between 1 and 63 characters.")
     private String email;
 
-    @Column
+    @Column(nullable = true, updatable = true)
+    @Size(min = 0, max = 63, message = "Max. phone length is 63 characters.")
     private String phone;
 
     public Contact() {

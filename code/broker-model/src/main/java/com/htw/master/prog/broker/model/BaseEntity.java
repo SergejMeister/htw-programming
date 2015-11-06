@@ -4,12 +4,14 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Date;
@@ -24,20 +26,20 @@ import java.util.Date;
 public abstract class BaseEntity implements Comparable, Serializable {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long identity;
 
+    @Version
     @NotNull
-    @Column
-    private Integer version;
+    @Column(nullable = false, updatable = true)
+    private int version;
 
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(updatable = false)
+    @Column(nullable = false, updatable = false, insertable = true)
     private Date creationTimestamp;
 
     protected BaseEntity() {
-        setVersion(1);
         this.creationTimestamp = new Date();
     }
 
@@ -61,12 +63,8 @@ public abstract class BaseEntity implements Comparable, Serializable {
         return identity;
     }
 
-    public Integer getVersion() {
+    public int getVersion() {
         return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
     }
 
     public Date getCreationTimestamp() {

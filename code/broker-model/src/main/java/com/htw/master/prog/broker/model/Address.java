@@ -3,6 +3,7 @@ package com.htw.master.prog.broker.model;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * Address model.
@@ -10,14 +11,17 @@ import javax.validation.constraints.NotNull;
 @Embeddable
 public class Address {
 
-    @Column
+    @Column(nullable = true, updatable = true)
+    @Size(min = 0, max = 63, message = "Max. street length is 63 characters.")
     private String street;
 
-    @Column
+    @Column(nullable = true, updatable = true)
+    @Size(min = 0, max = 15, message = "An event's postCode must contain between 0 and 15 characters.")
     private String postCode;
 
     @NotNull
-    @Column
+    @Column(nullable = false, updatable = true)
+    @Size(min = 1, max = 63, message = "An event's city must contain between 1 and 63 characters.")
     private String city;
 
     public String getStreet() {

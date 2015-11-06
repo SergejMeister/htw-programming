@@ -15,7 +15,6 @@ import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,6 +26,8 @@ import java.util.Set;
 @PrimaryKeyJoinColumn(name = "personIdentity")
 public class Person extends BaseEntity {
 
+    private static final byte[] EMPTY_PASSWORD_HASH = HashUtility.hashAsByte("");
+
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     private Set<Auction> auctions;
 
@@ -35,28 +36,31 @@ public class Person extends BaseEntity {
 
     @NotNull
     @Size(min = 2, max = 80, message = "An event's person alias must contain between 2 and 80 characters.")
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, updatable = true)
     private String alias;
 
     @NotNull
     @Column
     private byte[] passwordHash;
 
-    @Column(name = "groupAlias")
+    @Column(name = "groupAlias", nullable = false, updatable = true)
     @NotNull
     @Enumerated(EnumType.STRING)
     private Group group;
 
     @Embedded
     @Valid
+    @NotNull
     private Name name;
 
     @Embedded
     @Valid
+    @NotNull
     private Address address;
 
     @Embedded
     @Valid
+    @NotNull
     private Contact contact;
 
     public Person() {
@@ -65,24 +69,24 @@ public class Person extends BaseEntity {
 
     public Person(Group group) {
         this.group = group;
-        setAuctions(new HashSet<>());
-        setBids(new HashSet<>());
+        this.name = new Name();
+        this.address = new Address();
+        this.contact = new Contact();
+        this.auctions = new HashSet<>();
+        this.bids = new HashSet<>();
+        this.passwordHash = EMPTY_PASSWORD_HASH;
+    }
+
+    public static byte[] passwordHash(String password) {
+        return HashUtility.hashAsByte(password);
     }
 
     public Set<Auction> getAuctions() {
         return auctions;
     }
 
-    public void setAuctions(Set<Auction> auctions) {
-        this.auctions = auctions;
-    }
-
     public Set<Bid> getBids() {
         return bids;
-    }
-
-    public void setBids(Set<Bid> bids) {
-        this.bids = bids;
     }
 
     public String getAlias() {
@@ -101,11 +105,6 @@ public class Person extends BaseEntity {
         this.passwordHash = passwordHash;
     }
 
-    //TODO: password hashing in entity object?
-    public byte[] passwordHash(String password) throws NoSuchAlgorithmException {
-        return HashUtility.hashAsByte(password);
-    }
-
     public Group getGroup() {
         return group;
     }
@@ -114,23 +113,11 @@ public class Person extends BaseEntity {
         return name;
     }
 
-    public void setName(Name name) {
-        this.name = name;
-    }
-
     public Address getAddress() {
         return address;
     }
 
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
     public Contact getContact() {
         return contact;
-    }
-
-    public void setContact(Contact contact) {
-        this.contact = contact;
     }
 }

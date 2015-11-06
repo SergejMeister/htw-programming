@@ -15,6 +15,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,27 +37,30 @@ public class Auction extends BaseEntity {
     Set<Bid> bids;
 
     @NotNull
+    @Column(nullable = false, updatable = true)
+    @Size(min = 1, max = 255)
     private String title;
 
-    @NotNull
     @Min(0)
-    private Integer unitCount;
+    @Column(nullable = false, updatable = true)
+    private int unitCount;
 
-    @NotNull
     @Min(0)
-    private Double askingPrice;
+    @Column(nullable = false, updatable = true)
+    private double askingPrice;
 
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
-    @Column
+    @Column(nullable = false, updatable = true)
     private Date closureTimestamp;
 
     @NotNull
-    @Column
+    @Column(nullable = false, updatable = true)
+    @Size(min = 1, max = 8189)
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sellerReference")
+    @JoinColumn(name = "sellerReference", nullable = false, updatable = false, insertable = true)
     private Person seller;
 
     public Auction() {
@@ -65,7 +69,7 @@ public class Auction extends BaseEntity {
 
     public Auction(Person seller) {
         this.bids = new HashSet<>();
-        setSeller(seller);
+        this.seller = seller;
         setUnitCount(1);
         setAskingPrice(1.0);
         Instant tomorrow = LocalDateTime.now().plusDays(1).atZone(ZoneId.systemDefault()).toInstant();
@@ -80,19 +84,19 @@ public class Auction extends BaseEntity {
         this.title = title;
     }
 
-    public Integer getUnitCount() {
+    public int getUnitCount() {
         return unitCount;
     }
 
-    public void setUnitCount(Integer unitCount) {
+    public void setUnitCount(int unitCount) {
         this.unitCount = unitCount;
     }
 
-    public Double getAskingPrice() {
+    public double getAskingPrice() {
         return askingPrice;
     }
 
-    public void setAskingPrice(Double askingPrice) {
+    public void setAskingPrice(double askingPrice) {
         this.askingPrice = askingPrice;
     }
 
@@ -116,10 +120,6 @@ public class Auction extends BaseEntity {
         return seller;
     }
 
-    public void setSeller(Person seller) {
-        this.seller = seller;
-    }
-
     public long getSellerReference() {
         return seller == null ? 0 : seller.getIdentity();
     }
@@ -128,19 +128,16 @@ public class Auction extends BaseEntity {
         return bids;
     }
 
-    public void setBids(Set<Bid> bids) {
-        this.bids = bids;
-    }
-
     public Bid getBid(Person person) {
         for (Bid bid : bids) {
             if (bid.getBidder().compareTo(person) == 0) {
                 return bid;
             }
         }
-        //Optional<Bid> result = bids.stream().filter(bid -> bid.getBidder().compareTo(person) == 0).findFirst();
-        //        return result.isPresent() ? result.get() : null;
         return null;
+        //JAVA 8 language features is not compatible with jersey version
+        //        Optional<Bid> result = bids.stream().filter(bid -> bid.getBidder().compareTo(person) == 0).findFirst();
+        //                return result.isPresent() ? result.get() : null;
     }
 
     public boolean isClosed() {
