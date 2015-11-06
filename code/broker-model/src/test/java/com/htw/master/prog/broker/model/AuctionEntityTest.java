@@ -3,7 +3,7 @@ package com.htw.master.prog.broker.model;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AuctionEntityTest {//extends EntityTest {
+public class AuctionEntityTest extends EntityTest {
 
     @Test
     public void testConstraints() {

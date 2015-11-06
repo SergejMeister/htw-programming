@@ -1,6 +1,5 @@
 package com.htw.master.prog.broker.model;
 
-import com.htw.master.prog.broker.model.BaseEntity;
 import de.sb.java.TypeMetadata;
 import org.junit.After;
 import org.junit.AfterClass;

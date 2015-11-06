@@ -2,6 +2,7 @@ package com.htw.master.prog.broker.model;
 
 import de.sb.java.validation.Inequal;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -26,6 +27,7 @@ public class Bid extends BaseEntity {
 
     @NotNull
     @Min(0)
+    @Column
     private Double price;
 
     @ManyToOne(fetch = FetchType.LAZY)

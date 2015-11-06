@@ -28,6 +28,7 @@ public abstract class BaseEntity implements Comparable, Serializable {
     private Long identity;
 
     @NotNull
+    @Column
     private Integer version;
 
     @NotNull
@@ -37,7 +38,7 @@ public abstract class BaseEntity implements Comparable, Serializable {
 
     protected BaseEntity() {
         setVersion(1);
-        setCreationTimestamp(new Date());
+        this.creationTimestamp = new Date();
     }
 
     /**
@@ -70,9 +71,5 @@ public abstract class BaseEntity implements Comparable, Serializable {
 
     public Date getCreationTimestamp() {
         return creationTimestamp;
-    }
-
-    public void setCreationTimestamp(Date creationTimestamp) {
-        this.creationTimestamp = creationTimestamp;
     }
 }

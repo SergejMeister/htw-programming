@@ -3,6 +3,7 @@ package com.htw.master.prog.broker.model;
 import com.htw.master.prog.broker.enums.Group;
 import com.htw.master.prog.broker.util.HashUtility;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -26,10 +27,10 @@ import java.util.Set;
 @PrimaryKeyJoinColumn(name = "personIdentity")
 public class Person extends BaseEntity {
 
-    @OneToMany(mappedBy = "seller")
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     private Set<Auction> auctions;
 
-    @OneToMany(mappedBy = "bidder")
+    @OneToMany(mappedBy = "bidder", cascade = CascadeType.ALL)
     private Set<Bid> bids;
 
     @NotNull
@@ -38,6 +39,7 @@ public class Person extends BaseEntity {
     private String alias;
 
     @NotNull
+    @Column
     private byte[] passwordHash;
 
     @Column(name = "groupAlias")

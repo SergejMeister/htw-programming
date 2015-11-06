@@ -2,6 +2,8 @@ package com.htw.master.prog.broker.model;
 
 import de.sb.java.validation.Inequal;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -30,7 +32,7 @@ import java.util.Set;
     "creationTimestamp" })
 public class Auction extends BaseEntity {
 
-    @OneToMany(mappedBy = "auction")
+    @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL)
     Set<Bid> bids;
 
     @NotNull
@@ -46,9 +48,11 @@ public class Auction extends BaseEntity {
 
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
+    @Column
     private Date closureTimestamp;
 
     @NotNull
+    @Column
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
