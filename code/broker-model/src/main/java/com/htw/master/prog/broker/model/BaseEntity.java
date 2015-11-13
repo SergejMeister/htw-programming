@@ -34,7 +34,6 @@ public abstract class BaseEntity implements Comparable, Serializable {
     private int version;
 
     @NotNull
-    //@Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false, insertable = true)
     private Long creationTimestamp;
 

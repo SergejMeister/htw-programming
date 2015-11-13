@@ -16,25 +16,23 @@ import javax.validation.constraints.NotNull;
 /**
  * Bid entity.
  */
-//@Table(schema = "broker", name = "Bid", uniqueConstraints = {@UniqueConstraint(columnNames = {"auctionReference,bidderReference"})})
 @Table(name = "Bid", uniqueConstraints = {@UniqueConstraint(columnNames = {"auctionReference,bidderReference"})})
 @Entity
 @PrimaryKeyJoinColumn(name = "bidIdentity")
 @Inequal(operator = Inequal.Operator.NOT_EQUAL, leftAccessPath = {"bidder", "identity"}, rightAccessPath = {
         "auction", "seller", "identity"})
-//@Inequal(operator=Inequal.Operator.GREATER_EQUAL, leftAccessPath = { "price" }, rightAccessPath = {"auction", "askingPrice"})
 public class Bid extends BaseEntity {
 
     @Min(1)
     @Column(nullable = false, updatable = true)
     private double price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "auctionReference", nullable = false, updatable = false, insertable = true)
     @NotNull
     private Auction auction;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "bidderReference", nullable = false, updatable = false, insertable = true)
     @NotNull
     private Person bidder;

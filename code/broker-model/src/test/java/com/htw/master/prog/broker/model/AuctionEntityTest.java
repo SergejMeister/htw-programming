@@ -81,9 +81,9 @@ public class AuctionEntityTest extends EntityTest {
         Assert.assertFalse("Auction should be open", findAuction.isClosed());
 
         //update Auction
-        testAuction.setUnitCount(0);
+        testAuction.setUnitCount(2);
         auctionDao.update(testAuction);
-        Auction findAuctionWithNewUnitCouunt = auctionDao.findOne(testAuction.getIdentity());
-        Assert.assertTrue("Auction should be closed",findAuctionWithNewUnitCouunt.isClosed());
+        Auction findAuctionWithNewUnitCount = auctionDao.findOne(testAuction.getIdentity());
+        Assert.assertEquals("Auction unitCount should be 2",2,findAuctionWithNewUnitCount.getUnitCount());
     }
 }

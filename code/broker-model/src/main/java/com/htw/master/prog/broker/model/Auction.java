@@ -32,24 +32,23 @@ import java.util.Set;
     "creationTimestamp" })
 public class Auction extends BaseEntity {
 
-    @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL)
-    Set<Bid> bids;
+    @OneToMany(mappedBy = "auction", cascade = CascadeType.REMOVE)
+    private final Set<Bid> bids;
 
     @NotNull
     @Column(nullable = false, updatable = true)
     @Size(min = 1, max = 255)
     private String title;
 
-    @Min(0)
+    @Min(1)
     @Column(nullable = false, updatable = true)
     private int unitCount;
 
-    @Min(0)
+    @Min(1)
     @Column(nullable = false, updatable = true)
     private double askingPrice;
 
     @NotNull
-    //@Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = true)
     private Long closureTimestamp;
 
@@ -58,7 +57,7 @@ public class Auction extends BaseEntity {
     @Size(min = 1, max = 8189)
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sellerReference", nullable = false, updatable = false, insertable = true)
     @NotNull
     private Person seller;

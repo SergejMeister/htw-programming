@@ -29,19 +29,19 @@ public class Person extends BaseEntity {
 
     private static final byte[] EMPTY_PASSWORD_HASH = HashUtility.hashAsByte("");
 
-    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.REMOVE)
     private Set<Auction> auctions;
 
-    @OneToMany(mappedBy = "bidder", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "bidder", cascade = CascadeType.REMOVE)
     private Set<Bid> bids;
 
     @NotNull
-    @Size(min = 2, max = 80, message = "An event's person alias must contain between 2 and 80 characters.")
+    @Size(min = 1, max = 16, message = "An event's person alias must contain between 2 and 80 characters.")
     @Column(unique = true, nullable = false, updatable = true)
     private String alias;
 
     @NotNull
-    @Column
+    @Column(nullable = false, updatable = true)
     private byte[] passwordHash;
 
     @Column(name = "groupAlias", nullable = false, updatable = true)
