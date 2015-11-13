@@ -1,5 +1,11 @@
 package com.htw.master.prog.broker;
 
+import com.htw.master.prog.broker.dao.AuctionDao;
+import com.htw.master.prog.broker.dao.BidDao;
+import com.htw.master.prog.broker.dao.PersonDao;
+import com.htw.master.prog.broker.dao.beans.AuctionDaoBean;
+import com.htw.master.prog.broker.dao.beans.BidDaoBean;
+import com.htw.master.prog.broker.dao.beans.PersonDaoBean;
 import com.htw.master.prog.broker.model.Auction;
 import com.htw.master.prog.broker.model.Bid;
 import com.htw.master.prog.broker.model.Person;
@@ -9,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.persistence.criteria.CriteriaQuery;
 import java.util.List;
 
 public class BrokerModelMain {
@@ -29,15 +34,16 @@ public class BrokerModelMain {
 
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        CriteriaQuery<Bid> bidCriteriaQuery = entityManager.getCriteriaBuilder().createQuery(Bid.class);
-        List<Bid> bids = entityManager.createQuery(bidCriteriaQuery).getResultList();
+        BidDao bidDao = new BidDaoBean(entityManager);
+
+        List<Bid> bids = bidDao.findAll();
         for (Bid bid : bids) {
             LOG.info("Bid identity: " + bid.getIdentity());
             LOG.info("Bid person: " + bid.getBidder().getName());
         }
 
-        CriteriaQuery<Person> personCriteriaQuery = entityManager.getCriteriaBuilder().createQuery(Person.class);
-        List<Person> persons = entityManager.createQuery(personCriteriaQuery).getResultList();
+        PersonDao personDao = new PersonDaoBean(entityManager);
+        List<Person> persons = personDao.findAll();
         for (Person person : persons) {
             LOG.info("Person identity: " + person.getIdentity());
             LOG.info("Bid person: " + person.getName());
@@ -47,8 +53,24 @@ public class BrokerModelMain {
             }
         }
 
-        CriteriaQuery<Auction> auctionCriteriaQuery = entityManager.getCriteriaBuilder().createQuery(Auction.class);
-        List<Auction> auctions = entityManager.createQuery(auctionCriteriaQuery).getResultList();
+        LOG.info("Create a new Person");
+        Person smPerson = new Person();
+        smPerson.setAlias("SM");
+        smPerson.getName().setFamily("Meister");
+        smPerson.getName().setGiven("Sergej");
+        smPerson.getAddress().setCity("Berlin");
+        smPerson.getContact().setEmail("sergej.meister@mail.de");
+        personDao.create(smPerson);
+
+        Person findCreatedPerson = personDao.findOne(smPerson.getIdentity());
+        LOG.info("Sergej Person identity: " + findCreatedPerson.getIdentity());
+        LOG.info("Sergej person name: " + findCreatedPerson.getName());
+
+        LOG.info("Delete a created Person");
+        personDao.delete(findCreatedPerson);
+
+        AuctionDao auctionDao = new AuctionDaoBean(entityManager);
+        List<Auction> auctions = auctionDao.findAll();
         for (Auction auction : auctions) {
             LOG.info("Auction identity: " + auction.getIdentity());
             LOG.info("Auction title: " + auction.getTitle());
@@ -57,5 +79,4 @@ public class BrokerModelMain {
 
         LOG.info("Finish broker model");
     }
-
 }

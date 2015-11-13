@@ -49,9 +49,10 @@ public abstract class GenericDaoBean<T extends Serializable> implements GenericD
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     public List<T> findAll() {
-        return getEntityManager().createQuery("from " + clazz.getName()).getResultList();
+        return entityManager.createQuery("Select t from " + clazz.getSimpleName() + " t").getResultList();
     }
 
     /**

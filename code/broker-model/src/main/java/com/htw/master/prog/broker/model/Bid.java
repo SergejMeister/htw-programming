@@ -16,12 +16,12 @@ import javax.validation.constraints.NotNull;
 /**
  * Bid entity.
  */
-@Table(schema = "broker", name = "Bid", uniqueConstraints = {
-    @UniqueConstraint(columnNames = { "auctionReference,bidderReference" }) })
+//@Table(schema = "broker", name = "Bid", uniqueConstraints = {@UniqueConstraint(columnNames = {"auctionReference,bidderReference"})})
+@Table(name = "Bid", uniqueConstraints = {@UniqueConstraint(columnNames = {"auctionReference,bidderReference"})})
 @Entity
 @PrimaryKeyJoinColumn(name = "bidIdentity")
-@Inequal(operator = Inequal.Operator.NOT_EQUAL, leftAccessPath = { "bidder", "identity" }, rightAccessPath = {
-    "auction", "seller", "identity" })
+@Inequal(operator = Inequal.Operator.NOT_EQUAL, leftAccessPath = {"bidder", "identity"}, rightAccessPath = {
+        "auction", "seller", "identity"})
 //@Inequal(operator=Inequal.Operator.GREATER_EQUAL, leftAccessPath = { "price" }, rightAccessPath = {"auction", "askingPrice"})
 public class Bid extends BaseEntity {
 

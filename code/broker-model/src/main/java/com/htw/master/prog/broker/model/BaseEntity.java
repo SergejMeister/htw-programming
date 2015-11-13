@@ -18,7 +18,8 @@ import java.util.Date;
  * BaseEntity.
  */
 @Entity
-@Table(schema = "broker", name = "BaseEntity")
+//@Table(schema = "broker", name = "BaseEntity")
+@Table(name = "BaseEntity")
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "discriminator")
 public abstract class BaseEntity implements Comparable, Serializable {

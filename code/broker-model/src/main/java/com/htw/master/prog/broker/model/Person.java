@@ -21,7 +21,8 @@ import java.util.Set;
 /**
  * Person Entity.
  */
-@Table(schema = "broker", name = "Person")
+//@Table(schema = "broker", name = "Person")
+@Table(name = "Person")
 @Entity
 @PrimaryKeyJoinColumn(name = "personIdentity")
 public class Person extends BaseEntity {

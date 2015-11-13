@@ -24,7 +24,8 @@ import java.util.Set;
 /**
  * Entity Auction.
  */
-@Table(schema = "broker", name = "Auction")
+//@Table(schema = "broker", name = "Auction")
+@Table(name = "Auction")
 @Entity
 @PrimaryKeyJoinColumn(name = "auctionIdentity")
 @Inequal(operator = Inequal.Operator.GREATER, leftAccessPath = { "closureTimestamp" }, rightAccessPath = {
