@@ -28,8 +28,8 @@ import java.util.Set;
 @Table(name = "Auction")
 @Entity
 @PrimaryKeyJoinColumn(name = "auctionIdentity")
-@Inequal(operator = Inequal.Operator.GREATER, leftAccessPath = { "closureTimestamp" }, rightAccessPath = {
-    "creationTimestamp" })
+@Inequal(operator = Inequal.Operator.GREATER, leftAccessPath = {"closureTimestamp"}, rightAccessPath = {
+        "creationTimestamp"})
 public class Auction extends BaseEntity {
 
     @OneToMany(mappedBy = "auction", cascade = CascadeType.REMOVE)
