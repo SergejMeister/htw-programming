@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>broker-model</artifactId>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <dependencies>
         <!--EclipseLink required for @CacheIndex annotation-->
@@ -25,6 +25,35 @@
             <version>5.1.6</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>2.22.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.19</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-jdk-http</artifactId>
+            <version>2.22.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-jetty-http</artifactId>
+            <version>2.22.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+            <version>2.22.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.htw.master</groupId>
             <artifactId>broker-group</artifactId>
             <version>${project.version}</version>
@@ -32,5 +61,9 @@
             <systemPath>${project.basedir}/../libs/java-util-1.1.3.jar</systemPath>
         </dependency>
     </dependencies>
+
+    <build>
+        <finalName>services</finalName>
+    </build>
 
 </project>

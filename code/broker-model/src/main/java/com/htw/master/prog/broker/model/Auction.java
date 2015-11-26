@@ -14,6 +14,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlElement;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -24,7 +25,6 @@ import java.util.Set;
 /**
  * Entity Auction.
  */
-//@Table(schema = "broker", name = "Auction")
 @Table(name = "Auction")
 @Entity
 @PrimaryKeyJoinColumn(name = "auctionIdentity")
@@ -35,23 +35,28 @@ public class Auction extends BaseEntity {
     @OneToMany(mappedBy = "auction", cascade = CascadeType.REMOVE)
     private final Set<Bid> bids;
 
+    @XmlElement
     @NotNull
     @Column(nullable = false, updatable = true)
     @Size(min = 1, max = 255)
     private String title;
 
+    @XmlElement
     @Min(1)
     @Column(nullable = false, updatable = true)
     private int unitCount;
 
+    @XmlElement
     @Min(1)
     @Column(nullable = false, updatable = true)
     private double askingPrice;
 
+    @XmlElement
     @NotNull
     @Column(nullable = false, updatable = true)
     private Long closureTimestamp;
 
+    @XmlElement
     @NotNull
     @Column(nullable = false, updatable = true)
     @Size(min = 1, max = 8189)
@@ -140,10 +145,10 @@ public class Auction extends BaseEntity {
     }
 
     public boolean isClosed() {
-        return new Date().after(getClosureTimestamp()) || isSealed();
+        return new Date().after(getClosureTimestamp());
     }
 
     public boolean isSealed() {
-        return unitCount <= 0;
+        return 0 < bids.size() || isClosed();
     }
 }

@@ -12,6 +12,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * Bid entity.
@@ -23,6 +24,7 @@ import javax.validation.constraints.NotNull;
         "auction", "seller", "identity"})
 public class Bid extends BaseEntity {
 
+    @XmlElement
     @Min(1)
     @Column(nullable = false, updatable = true)
     private double price;

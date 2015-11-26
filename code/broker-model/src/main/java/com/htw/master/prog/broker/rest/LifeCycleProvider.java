@@ -17,6 +17,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.util.Map;
@@ -50,6 +51,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
  * broken in some environments, but works nicely in most, like Jersey.
  */
 // TODO Uncomment this: @Provider
+@Provider
 @TypeMetadata(copyright = "2013-2015 Sascha Baumeister, all rights reserved", version = "1.0.0", authors = "Sascha Baumeister")
 public class LifeCycleProvider implements ContainerRequestFilter, ContainerResponseFilter, ExceptionMapper<Throwable> {
 	static private volatile EntityManagerFactory BROKER_FACTORY;

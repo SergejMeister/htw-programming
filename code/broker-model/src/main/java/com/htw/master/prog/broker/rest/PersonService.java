@@ -1,89 +1,222 @@
 package com.htw.master.prog.broker.rest;
 
 
+import com.htw.master.prog.broker.enums.Group;
+import com.htw.master.prog.broker.model.Auction;
+import com.htw.master.prog.broker.model.Bid;
 import com.htw.master.prog.broker.model.Person;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 import javax.persistence.RollbackException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 @Path("people")
 public class PersonService {
 
+    static final String PERSON_CRITERIA = new StringBuilder()
+            .append("select p.identity from Person as p where ")
+            .append("(:group is null or p.group = :group) ")
+            .append("and (:alias is null or p.alias = :alias) ")
+            .append("and (:family is null or p.name.family = :family) ")
+            .append("and (:given is null or p.name.given = :given) ")
+            .append("and (:street is null or p.address.street = :street) ")
+            .append("and (:postCode is null or p.address.postCode = :postCode) ")
+            .append("and (:city is null or p.address.city = :city) ")
+            .append("and (:email is null or p.contact.email = :email) ")
+            .append("and (:phone is null or p.contact.phone = :phone) ")
+            .append("and (:lowerCreationTimestamp is null or p.creationTimestamp >= :lowerCreationTimestamp) ")
+            .append("and (:upperCreationTimestamp is null or p.creationTimestamp <= :upperCreationTimestamp)")
+            .toString();
+
     @GET
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getPersons() {
+    @Path("healthcheck")
+    public Response healthCheck() {
         return Response.ok().build();
     }
 
 
-    @PUT
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response savePerson(@NotNull @Valid final Person template) {
-        boolean persistMode = template.getIdentity() == null;
-        final EntityManager em = LifeCycleProvider.brokerManager();
-        Long identity = null;
-        if (persistMode) {
-            Person personToPersist;
-        } else {
-            em.getTransaction().begin();
+    @SuppressWarnings("unchecked")
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response getPersons(
+            @HeaderParam("authorization") final String authentication,
+            @QueryParam("resultLength") int resultLength,
+            @QueryParam("resultOffset") int resultOffset,
+            @QueryParam("group") String group,
+            @QueryParam("alias") String alias,
+            @QueryParam("family") String family,
+            @QueryParam("given") String given,
+            @QueryParam("street") String street,
+            @QueryParam("postCode") String postCode,
+            @QueryParam("city") String city,
+            @QueryParam("email") String email,
+            @QueryParam("phone") String phone,
+            @QueryParam("lowerCreationTimestamp") Long lowerCreationTimestamp,
+            @QueryParam("upperCreationTimestamp") Long upperCreationTimestamp) {
 
-            //update
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        Query query = em.createQuery(PERSON_CRITERIA);
+        if (group == null) {
+            query.setParameter("group", group);
+        } else {
+            Group groupEnum = Group.valueOf(group.toUpperCase());
+            query.setParameter("group", groupEnum);
+        }
+        query.setParameter("alias", alias);
+        query.setParameter("family", family);
+        query.setParameter("given", given);
+        query.setParameter("street", street);
+        query.setParameter("postCode", postCode);
+        query.setParameter("city", city);
+        query.setParameter("email", email);
+        query.setParameter("phone", phone);
+        query.setParameter("lowerCreationTimestamp", lowerCreationTimestamp);
+        query.setParameter("upperCreationTimestamp", upperCreationTimestamp);
+        if (resultOffset > 0) {
+            query.setFirstResult(resultOffset);
+        }
+        if (resultLength > 0) {
+            query.setMaxResults(resultLength);
+        }
+        Collection<Long> resultIdentities = query.getResultList();
+        Collection<Person> resultPeople = new TreeSet<>(Comparator.comparing(Person::getAlias));
+        for (Long identity : resultIdentities) {
+            Person person = em.find(Person.class, identity);
+            if (person != null) {
+                resultPeople.add(person);
+            }
         }
 
-        return Response.ok().entity(identity).build();
+        Entity<Collection<Person>> entity = Entity.entity(resultPeople, MediaType.APPLICATION_XML);
+        return Response.ok().entity(entity).build();
+    }
+
+    @PUT
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public long createOrUpdatePerson(@HeaderParam("authorization") final String authentication,
+                                     @NotNull @Valid final Person template) {
+        boolean persistMode = template.getIdentity() == 0;
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        try {
+            Person person;
+            if (persistMode) {
+                person = new Person(template.getGroup());
+            } else {
+                person = em.getReference(Person.class, template.getIdentity());
+            }
+
+            person.setAlias(template.getAlias());
+            //        person.setPasswordHash(Person.passwordHash(template.getPasswordHash()));
+            // person.setPasswordHash(template.getPasswordHash());				kommt das nicht als Klartext? wie genau muss das sein
+            person.setPasswordHash(Person.passwordHash(authentication));
+            person.getName().setFamily(template.getName().getFamily());
+            person.getName().setGiven(template.getName().getGiven());
+            person.getAddress().setCity(template.getAddress().getCity());
+            person.getAddress().setPostCode(template.getAddress().getPostCode());
+            person.getAddress().setStreet(template.getAddress().getStreet());
+            person.getContact().setEmail(template.getContact().getEmail());
+            person.getContact().setPhone(template.getContact().getPhone());
+            try {
+                // em.getTransaction().begin();
+                if (persistMode) {
+                    em.persist(person);
+                }
+                em.getTransaction().commit();
+            } catch (PersistenceException pe) {
+                em.getTransaction().rollback();
+            } finally {
+                em.getTransaction().begin();
+            }
+            return person.getIdentity();
+        } catch (final EntityNotFoundException exception) {
+            throw new ClientErrorException(Response.Status.NOT_FOUND);
+        } catch (final RollbackException exception) {
+            throw new ClientErrorException(Response.Status.CONFLICT);
+        }
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}")
-    public Response getPerson(@PathParam("identity") final int identity) {
+    public Response getPerson(@HeaderParam("Authorization") final String authentication,
+                              @PathParam("identity") final long identity) {
         final EntityManager em = LifeCycleProvider.brokerManager();
-        Person person = null;
-        em.getEntityManagerFactory().getCache().evict(Person.class, identity);
+        //			final Person requester = LifeCycleProvider.authenticate(authentication);
+        //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
         try {
-            person = em.getReference(Person.class, identity);
-            try {
-                em.getTransaction().commit();
-            } finally {
-                em.getTransaction().begin();
-            }
-        } catch (final EntityNotFoundException exception) {
-            throw new ClientErrorException(NOT_FOUND);
-        } catch (final RollbackException exception) {
-            throw new ClientErrorException(CONFLICT);
-        } finally {
-            Entity<Person> entity = Entity.entity(person, MediaType.APPLICATION_JSON);
+            Person person = em.getReference(Person.class, identity);
+            Entity<Person> entity = Entity.entity(person, MediaType.APPLICATION_XML);
             return Response.ok().entity(entity).build();
+        } catch (final EntityNotFoundException exception) {
+            throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
     }
 
+    @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/auctions")
-    public Response getAuctions(@PathParam("identity") final int identity) {
-        return Response.ok().build();
+    public Response getAuctions(@HeaderParam("Authorization") final String authentication,
+                                @PathParam("identity") final long identity) {
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        String personCriteria = new StringBuilder()
+                .append("select a.identity from Auction as a where ")
+                .append("a.seller.identity = :personIdentity")
+                .toString();
+        Query query = em.createQuery(personCriteria);
+        query.setParameter("personIdentity", identity);
+        Collection<Long> identities = query.getResultList();
+        Collection<Auction> auctions = new TreeSet<>(Comparator.comparing(Auction::getIdentity));
+        for (Long auctionIdentity : identities) {
+            Auction auction = em.find(Auction.class, auctionIdentity);
+            if (auction != null) {
+                auctions.add(auction);
+            }
+        }
+        Entity<Collection<Auction>> entity = Entity.entity(auctions, MediaType.APPLICATION_XML);
+        return Response.ok().entity(entity).build();
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/bids")
-    public Response getBids(@PathParam("identity") final int identity) {
-        return Response.ok().build();
+    public Response getBids(@HeaderParam("Authorization") final String authentication,
+                            @PathParam("identity") final long identity) {
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        String personCriteria = new StringBuilder()
+                .append("select b.identity from Bid as b where ")
+                .append("b.bidder.identity = :personIdentity")
+                .toString();
+        Query query = em.createQuery(personCriteria);
+        query.setParameter("personIdentity", identity);
+        Collection<Long> identities = query.getResultList();
+        Collection<Bid> bids = new TreeSet<>(Comparator.comparing(Bid::getIdentity));
+        for (Long bidIdentity : identities) {
+            Bid bid = em.find(Bid.class, bidIdentity);
+            if (bid != null) {
+                bids.add(bid);
+            }
+        }
+        Entity<Collection<Bid>> entity = Entity.entity(bids, MediaType.APPLICATION_XML);
+        return Response.ok().entity(entity).build();
     }
 }

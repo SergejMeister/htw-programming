@@ -15,13 +15,13 @@ import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlElement;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Person Entity.
  */
-//@Table(schema = "broker", name = "Person")
 @Table(name = "Person")
 @Entity
 @PrimaryKeyJoinColumn(name = "personIdentity")
@@ -35,30 +35,36 @@ public class Person extends BaseEntity {
     @OneToMany(mappedBy = "bidder", cascade = CascadeType.REMOVE)
     private Set<Bid> bids;
 
+    @XmlElement
     @NotNull
     @Size(min = 1, max = 16, message = "An event's person alias must contain between 2 and 80 characters.")
     @Column(unique = true, nullable = false, updatable = true)
     private String alias;
 
+    @XmlElement
     @NotNull
     @Column(nullable = false, updatable = true)
     private byte[] passwordHash;
 
+    @XmlElement
     @Column(name = "groupAlias", nullable = false, updatable = true)
     @NotNull
     @Enumerated(EnumType.STRING)
     private Group group;
 
+    @XmlElement
     @Embedded
     @Valid
     @NotNull
     private Name name;
 
+    @XmlElement
     @Embedded
     @Valid
     @NotNull
     private Address address;
 
+    @XmlElement
     @Embedded
     @Valid
     @NotNull

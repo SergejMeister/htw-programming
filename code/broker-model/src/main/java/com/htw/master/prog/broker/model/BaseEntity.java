@@ -11,33 +11,45 @@ import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlID;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 import java.io.Serializable;
 import java.util.Date;
 
 /**
  * BaseEntity.
  */
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType
+@XmlSeeAlso({Auction.class, Bid.class, Person.class})
 @Entity
-//@Table(schema = "broker", name = "BaseEntity")
 @Table(name = "BaseEntity")
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "discriminator")
 public abstract class BaseEntity implements Comparable, Serializable {
 
+    @XmlID
+    @XmlElement
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long identity;
 
+    @XmlElement
     @Version
     @NotNull
     @Column(nullable = false, updatable = true)
     private int version;
 
+    @XmlElement
     @NotNull
     @Column(nullable = false, updatable = false, insertable = true)
     private Long creationTimestamp;
 
-    protected BaseEntity() {
+    public BaseEntity() {
         this.creationTimestamp = new Date().getTime();
     }
 
@@ -65,7 +77,11 @@ public abstract class BaseEntity implements Comparable, Serializable {
         return version;
     }
 
-    public Date getCreationTimestamp() {
+    public Long getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public Date getCreationDate() {
         return new Date(creationTimestamp);
     }
 }
