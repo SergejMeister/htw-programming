@@ -33,7 +33,6 @@ import java.util.Date;
 public abstract class BaseEntity implements Comparable, Serializable {
 
     @XmlID
-    @XmlElement
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long identity;
@@ -75,6 +74,10 @@ public abstract class BaseEntity implements Comparable, Serializable {
 
     public int getVersion() {
         return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     public Long getCreationTimestamp() {

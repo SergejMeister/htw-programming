@@ -16,6 +16,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,6 +26,7 @@ import java.util.Set;
 @Table(name = "Person")
 @Entity
 @PrimaryKeyJoinColumn(name = "personIdentity")
+@XmlRootElement
 public class Person extends BaseEntity {
 
     private static final byte[] EMPTY_PASSWORD_HASH = HashUtility.hashAsByte("");
@@ -46,28 +48,28 @@ public class Person extends BaseEntity {
     @Column(nullable = false, updatable = true)
     private byte[] passwordHash;
 
-    @XmlElement
     @Column(name = "groupAlias", nullable = false, updatable = true)
     @NotNull
     @Enumerated(EnumType.STRING)
+    @XmlElement
     private Group group;
 
-    @XmlElement
     @Embedded
     @Valid
     @NotNull
+    @XmlElement
     private Name name;
 
-    @XmlElement
     @Embedded
     @Valid
     @NotNull
+    @XmlElement
     private Address address;
 
-    @XmlElement
     @Embedded
     @Valid
     @NotNull
+    @XmlElement
     private Contact contact;
 
     public Person() {
@@ -112,18 +114,22 @@ public class Person extends BaseEntity {
         this.passwordHash = passwordHash;
     }
 
+    @XmlElement
     public Group getGroup() {
         return group;
     }
 
+    @XmlElement
     public Name getName() {
         return name;
     }
 
+    @XmlElement
     public Address getAddress() {
         return address;
     }
 
+    @XmlElement
     public Contact getContact() {
         return contact;
     }

@@ -12,14 +12,15 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
@@ -47,17 +48,18 @@ public class AuctionService {
 
     @GET
     @Path("healthcheck")
-    public Response healthCheck() {
-        return Response.ok().build();
+    @Produces(MediaType.TEXT_PLAIN)
+    public String healthCheck() {
+        return "OK";
     }
 
     @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getAuctions(
+    public Collection<Auction> getAuctions(
             @HeaderParam("authorization") final String authentication,
-            @QueryParam("resultLength") int resultLength,
-            @QueryParam("resultOffset") int resultOffset,
+            @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
+            @DefaultValue("-1") @QueryParam("resultOffset") int resultOffset,
             @QueryParam("titleFragment") String titleFragment,
             @QueryParam("lowerUnitCount") Short lowerUnitCount,
             @QueryParam("upperUnitCount") Short upperUnitCount,
@@ -97,12 +99,13 @@ public class AuctionService {
                 auctions.add(auction);
             }
         }
-        Entity<Collection<Auction>> entity = Entity.entity(auctions, MediaType.APPLICATION_JSON);
-        return Response.ok().entity(entity).build();
+
+        return auctions;
     }
 
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces(MediaType.TEXT_PLAIN)
     public long createOrUpdateAuction(@HeaderParam("authorization") final String authentication,
                                       @NotNull @Valid final Auction template) {
         if (template.isSealed()) {
@@ -114,23 +117,20 @@ public class AuctionService {
                 if (persistMode) {
                     auction = new Auction(requester);
                 } else {
-                    auction = em.getReference(Auction.class, template.getIdentity());
+                    auction = em.find(Auction.class, template.getIdentity());
+                    if (auction == null) {
+                        throw new NotFoundException();
+                    }
                 }
                 auction.setAskingPrice(template.getAskingPrice());
                 auction.setClosureTimestamp(template.getClosureTimestamp());
                 auction.setDescription(template.getDescription());
                 auction.setTitle(template.getTitle());
                 auction.setUnitCount(template.getUnitCount());
-//                auction.getSeller().setAlias(template.getSeller().getAlias());
-//                auction.getSeller().getName().setFamily(template.getSeller().getName().getFamily());
-//                auction.getSeller().getName().setGiven(template.getSeller().getName().getGiven());
-//                auction.getSeller().getAddress().setCity(template.getSeller().getAddress().getCity());
-//                auction.getSeller().getAddress().setPostCode(template.getSeller().getAddress().getPostCode());
-//                auction.getSeller().getAddress().setStreet(template.getSeller().getAddress().getStreet());
-//                auction.getSeller().getContact().setEmail(template.getSeller().getContact().getEmail());
-//                auction.getSeller().getContact().setPhone(template.getSeller().getContact().getPhone());
+                auction.setVersion(template.getVersion());
+
+                //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
                 try {
-                    // em.getTransaction().begin();
                     if (persistMode) {
                         em.persist(auction);
                     }
@@ -154,15 +154,12 @@ public class AuctionService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}")
-    public Response getAuction(@HeaderParam("Authorization") final String authentication,
-                               @PathParam("identity") final long identity) {
+    public Auction getAuction(@HeaderParam("Authorization") final String authentication,
+                              @PathParam("identity") final long identity) {
         final EntityManager em = LifeCycleProvider.brokerManager();
-        //		final Person requester = LifeCycleProvider.authenticate(authentication);
-        //	em.getEntityManagerFactory().getCache().evict(Person.class, identity);
         try {
             Auction auction = em.getReference(Auction.class, identity);
-            Entity<Auction> entity = Entity.entity(auction, MediaType.APPLICATION_JSON);
-            return Response.ok().entity(entity).build();
+            return auction;
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }

@@ -15,14 +15,15 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collection;
@@ -49,18 +50,18 @@ public class PersonService {
 
     @GET
     @Path("healthcheck")
-    public Response healthCheck() {
-        return Response.ok().build();
+    @Produces(MediaType.TEXT_PLAIN)
+    public String healthCheck() {
+        return "OK";
     }
-
 
     @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getPersons(
+    public Collection<Person> getPersons(
             @HeaderParam("authorization") final String authentication,
-            @QueryParam("resultLength") int resultLength,
-            @QueryParam("resultOffset") int resultOffset,
+            @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
+            @DefaultValue("-1") @QueryParam("resultOffset") int resultOffset,
             @QueryParam("group") String group,
             @QueryParam("alias") String alias,
             @QueryParam("family") String family,
@@ -106,13 +107,14 @@ public class PersonService {
             }
         }
 
-        Entity<Collection<Person>> entity = Entity.entity(resultPeople, MediaType.APPLICATION_XML);
-        return Response.ok().entity(entity).build();
+        return resultPeople;
     }
 
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces(MediaType.TEXT_PLAIN)
     public long createOrUpdatePerson(@HeaderParam("authorization") final String authentication,
+                                     @HeaderParam("SET-password") final String password,
                                      @NotNull @Valid final Person template) {
         boolean persistMode = template.getIdentity() == 0;
         final EntityManager em = LifeCycleProvider.brokerManager();
@@ -121,13 +123,17 @@ public class PersonService {
             if (persistMode) {
                 person = new Person(template.getGroup());
             } else {
-                person = em.getReference(Person.class, template.getIdentity());
+                person = em.find(Person.class, template.getIdentity());
+                if (person == null) {
+                    throw new NotFoundException();
+                }
             }
 
             person.setAlias(template.getAlias());
-            //        person.setPasswordHash(Person.passwordHash(template.getPasswordHash()));
-            // person.setPasswordHash(template.getPasswordHash());				kommt das nicht als Klartext? wie genau muss das sein
-            person.setPasswordHash(Person.passwordHash(authentication));
+            if (password != null && !password.isEmpty()) {
+                byte[] passwordHash = Person.passwordHash(password);
+                person.setPasswordHash(passwordHash);
+            }
             person.getName().setFamily(template.getName().getFamily());
             person.getName().setGiven(template.getName().getGiven());
             person.getAddress().setCity(template.getAddress().getCity());
@@ -135,8 +141,10 @@ public class PersonService {
             person.getAddress().setStreet(template.getAddress().getStreet());
             person.getContact().setEmail(template.getContact().getEmail());
             person.getContact().setPhone(template.getContact().getPhone());
+            person.setVersion(template.getVersion());
+
+            //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
             try {
-                // em.getTransaction().begin();
                 if (persistMode) {
                     em.persist(person);
                 }
@@ -157,15 +165,12 @@ public class PersonService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}")
-    public Response getPerson(@HeaderParam("Authorization") final String authentication,
-                              @PathParam("identity") final long identity) {
+    public Person getPerson(@HeaderParam("Authorization") final String authentication,
+                            @PathParam("identity") final long identity) {
         final EntityManager em = LifeCycleProvider.brokerManager();
-        //			final Person requester = LifeCycleProvider.authenticate(authentication);
-        //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
         try {
             Person person = em.getReference(Person.class, identity);
-            Entity<Person> entity = Entity.entity(person, MediaType.APPLICATION_XML);
-            return Response.ok().entity(entity).build();
+            return person;
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
@@ -175,8 +180,8 @@ public class PersonService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/auctions")
-    public Response getAuctions(@HeaderParam("Authorization") final String authentication,
-                                @PathParam("identity") final long identity) {
+    public Collection<Auction> getAuctions(@HeaderParam("Authorization") final String authentication,
+                                           @PathParam("identity") final long identity) {
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
                 .append("select a.identity from Auction as a where ")
@@ -192,15 +197,15 @@ public class PersonService {
                 auctions.add(auction);
             }
         }
-        Entity<Collection<Auction>> entity = Entity.entity(auctions, MediaType.APPLICATION_XML);
-        return Response.ok().entity(entity).build();
+        return auctions;
     }
 
+    @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/bids")
-    public Response getBids(@HeaderParam("Authorization") final String authentication,
-                            @PathParam("identity") final long identity) {
+    public Collection<Bid> getBids(@HeaderParam("Authorization") final String authentication,
+                                   @PathParam("identity") final long identity) {
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
                 .append("select b.identity from Bid as b where ")
@@ -216,7 +221,6 @@ public class PersonService {
                 bids.add(bid);
             }
         }
-        Entity<Collection<Bid>> entity = Entity.entity(bids, MediaType.APPLICATION_XML);
-        return Response.ok().entity(entity).build();
+        return bids;
     }
 }

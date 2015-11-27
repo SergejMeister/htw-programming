@@ -15,6 +15,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -25,6 +26,7 @@ import java.util.Set;
 /**
  * Entity Auction.
  */
+@XmlRootElement
 @Table(name = "Auction")
 @Entity
 @PrimaryKeyJoinColumn(name = "auctionIdentity")
@@ -124,6 +126,7 @@ public class Auction extends BaseEntity {
         return seller;
     }
 
+    @XmlElement
     public long getSellerReference() {
         return seller == null ? 0 : seller.getIdentity();
     }
@@ -144,10 +147,12 @@ public class Auction extends BaseEntity {
         //                return result.isPresent() ? result.get() : null;
     }
 
+    @XmlElement
     public boolean isClosed() {
         return new Date().after(getClosureTimestamp());
     }
 
+    @XmlElement
     public boolean isSealed() {
         return 0 < bids.size() || isClosed();
     }

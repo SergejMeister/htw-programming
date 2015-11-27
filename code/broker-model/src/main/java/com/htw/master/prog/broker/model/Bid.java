@@ -13,6 +13,7 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Bid entity.
@@ -22,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 @PrimaryKeyJoinColumn(name = "bidIdentity")
 @Inequal(operator = Inequal.Operator.NOT_EQUAL, leftAccessPath = {"bidder", "identity"}, rightAccessPath = {
         "auction", "seller", "identity"})
+@XmlRootElement
 public class Bid extends BaseEntity {
 
     @XmlElement
@@ -61,6 +63,7 @@ public class Bid extends BaseEntity {
         return auction;
     }
 
+    @XmlElement
     public long getAuctionReference() {
         return auction == null ? 0 : auction.getIdentity();
     }
@@ -69,6 +72,7 @@ public class Bid extends BaseEntity {
         return bidder;
     }
 
+    @XmlElement
     public long getBidderReference() {
         return bidder == null ? 0 : this.bidder.getIdentity();
     }
