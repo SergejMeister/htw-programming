@@ -130,8 +130,17 @@ public class PersonService {
                     throw new ClientErrorException(Response.Status.UNAUTHORIZED);
                 }
 
+                Boolean isAdmin = Group.ADMIN.equals(authorizedPerson.getGroup());
                 if (person.compareTo(authorizedPerson) != 0) {
-                    throw new ClientErrorException(Response.Status.FORBIDDEN);
+                    //the requester would like to alert data of other person.
+                    if(!isAdmin){
+                        throw new ClientErrorException(Response.Status.FORBIDDEN);
+                    }
+                }else{
+                    if(Group.ADMIN.equals(template.getGroup()) && !isAdmin){
+                        //only admin have permissions to set own group to ADMIN
+                        throw new ClientErrorException(Response.Status.FORBIDDEN);
+                    }
                 }
             }
 
@@ -148,6 +157,7 @@ public class PersonService {
             person.getContact().setEmail(template.getContact().getEmail());
             person.getContact().setPhone(template.getContact().getPhone());
             person.setVersion(template.getVersion());
+            person.setGroup(template.getGroup());
 
             //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
             try {
