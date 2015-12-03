@@ -1,6 +1,7 @@
 package com.htw.master.prog.broker.rest;
 
 import com.htw.master.prog.broker.model.Auction;
+import com.htw.master.prog.broker.model.Bid;
 import com.htw.master.prog.broker.model.Person;
 
 import javax.persistence.EntityManager;
@@ -15,6 +16,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -161,10 +163,73 @@ public class AuctionService {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
-            Auction auction = em.getReference(Auction.class, identity);
+            Auction auction = em.find(Auction.class, identity);
             return auction;
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("{identity}/bid")
+    public Bid getBidOfRequester(@HeaderParam("Authorization") final String authentication,
+                                 @PathParam("identity") final long identity) {
+        Person requester = LifeCycleProvider.authenticate(authentication);
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        try {
+            Auction auction = em.find(Auction.class, identity);
+            return requester.getBid(auction);
+        } catch (final EntityNotFoundException exception) {
+            throw new ClientErrorException(Response.Status.NOT_FOUND);
+        }
+    }
+
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("{identity}/bid")
+    public Response updateBid(@HeaderParam("Authorization") final String authentication,
+                              @PathParam("identity") final long identity, @NotNull final Bid template) {
+        //@Valid - Bid.price erlaubt nur die Value groeßer 0
+        Person requester = LifeCycleProvider.authenticate(authentication);
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        Auction auction;
+        try {
+            auction = em.find(Auction.class, identity);
+        } catch (final EntityNotFoundException exception) {
+            throw new ClientErrorException(Response.Status.NOT_FOUND);
+        }
+
+        boolean persistMode = template.getIdentity() == 0;
+        try {
+            Bid bid;
+
+            if (persistMode) {
+                bid = new Bid(auction, requester);
+                if (template.getPrice() > 0) {
+                    bid.setPrice(template.getPrice());
+                }
+                em.persist(bid);
+            } else {
+                bid = em.find(Bid.class, template.getIdentity());
+                if (bid == null) {
+                    throw new ClientErrorException(Response.Status.NOT_FOUND);
+                }
+                if (template.getPrice() == 0) {
+                    em.remove(bid);
+                } else {
+                    //update
+                    if (template.getPrice() >= bid.getPrice()) {
+                        bid.setPrice(template.getPrice());
+
+                    }
+                }
+            }
+            em.getTransaction().commit();
+        } finally {
+            em.getTransaction().begin();
+        }
+
+        return Response.accepted().build();
     }
 }

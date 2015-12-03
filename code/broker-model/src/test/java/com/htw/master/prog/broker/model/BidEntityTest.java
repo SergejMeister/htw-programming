@@ -56,7 +56,7 @@ public class BidEntityTest extends EntityTest {
         Assert.assertEquals("must be greater than or equal to 1", auctionNullConstraint.getMessage());
 
         constraintViolations.clear();
-        emptyEntity.setPrice(Double.MAX_VALUE);
+        emptyEntity.setPrice(1);
         constraintViolations = getEntityValidatorFactory().getValidator().validate(emptyEntity);
         auctionNullConstraint = findByField(constraintViolations, "price");
         Assert.assertNull("Price should be valid!", auctionNullConstraint);

@@ -133,11 +133,11 @@ public class PersonService {
                 Boolean isAdmin = Group.ADMIN.equals(authorizedPerson.getGroup());
                 if (person.compareTo(authorizedPerson) != 0) {
                     //the requester would like to alert data of other person.
-                    if(!isAdmin){
+                    if (!isAdmin) {
                         throw new ClientErrorException(Response.Status.FORBIDDEN);
                     }
-                }else{
-                    if(Group.ADMIN.equals(template.getGroup()) && !isAdmin){
+                } else {
+                    if (Group.ADMIN.equals(template.getGroup()) && !isAdmin) {
                         //only admin have permissions to set own group to ADMIN
                         throw new ClientErrorException(Response.Status.FORBIDDEN);
                     }
@@ -184,11 +184,18 @@ public class PersonService {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
-            Person person = em.getReference(Person.class, identity);
+            Person person = em.find(Person.class, identity);
             return person;
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Path("requester")
+    public Person getRequester(@HeaderParam("Authorization") final String authentication) {
+        return LifeCycleProvider.authenticate(authentication);
     }
 
     @SuppressWarnings("unchecked")
@@ -222,20 +229,29 @@ public class PersonService {
     @Path("{identity}/bids")
     public Collection<Bid> getBids(@HeaderParam("Authorization") final String authentication,
                                    @PathParam("identity") final long identity) {
-        LifeCycleProvider.authenticate(authentication);
+        Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
                 .append("select b.identity from Bid as b where ")
                 .append("b.bidder.identity = :personIdentity")
                 .toString();
+
         Query query = em.createQuery(personCriteria);
         query.setParameter("personIdentity", identity);
+
+        boolean isSamePerson = requester.getIdentity() == identity;
         Collection<Long> identities = query.getResultList();
         Collection<Bid> bids = new TreeSet<>(Comparator.comparing(Bid::getIdentity));
         for (Long bidIdentity : identities) {
             Bid bid = em.find(Bid.class, bidIdentity);
             if (bid != null) {
-                bids.add(bid);
+                if (isSamePerson) {
+                    bids.add(bid);
+                } else {
+                    if (bid.getAuction().isClosed()) {
+                        bids.add(bid);
+                    }
+                }
             }
         }
         return bids;

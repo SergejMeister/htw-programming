@@ -114,9 +114,12 @@ public class Person extends BaseEntity {
         this.passwordHash = passwordHash;
     }
 
-    @XmlElement
     public Group getGroup() {
         return group;
+    }
+
+    public void setGroup(Group group) {
+        this.group = group;
     }
 
     @XmlElement
@@ -132,5 +135,17 @@ public class Person extends BaseEntity {
     @XmlElement
     public Contact getContact() {
         return contact;
+    }
+
+    public Bid getBid(Auction auction) {
+        for (Bid bid : bids) {
+            for (Bid auctionBid : auction.getBids()) {
+                if (bid.compareTo(auctionBid) == 0) {
+                    return bid;
+                }
+            }
+        }
+
+        return null;
     }
 }

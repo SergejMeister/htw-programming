@@ -29,7 +29,7 @@ public class Bid extends BaseEntity {
     @XmlElement
     @Min(1)
     @Column(nullable = false, updatable = true)
-    private double price;
+    private long price;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "auctionReference", nullable = false, updatable = false, insertable = true)
@@ -46,16 +46,16 @@ public class Bid extends BaseEntity {
     }
 
     public Bid(Auction auction, Person bidder) {
-        setPrice(1.0);
+        setPrice(1);
         this.auction = auction;
         this.bidder = bidder;
     }
 
-    public double getPrice() {
+    public long getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(long price) {
         this.price = price;
     }
 
