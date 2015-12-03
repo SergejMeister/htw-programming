@@ -8,7 +8,6 @@ import com.htw.master.prog.broker.model.Person;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
-import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.RollbackException;
 import javax.validation.Valid;
@@ -18,7 +17,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -29,6 +27,7 @@ import javax.ws.rs.core.Response;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
+
 
 @Path("people")
 public class PersonService {
@@ -59,7 +58,7 @@ public class PersonService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Collection<Person> getPersons(
-            @HeaderParam("authorization") final String authentication,
+            @HeaderParam("Authorization") final String authentication,
             @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
             @DefaultValue("-1") @QueryParam("resultOffset") int resultOffset,
             @QueryParam("group") String group,
@@ -73,6 +72,8 @@ public class PersonService {
             @QueryParam("phone") String phone,
             @QueryParam("lowerCreationTimestamp") Long lowerCreationTimestamp,
             @QueryParam("upperCreationTimestamp") Long upperCreationTimestamp) {
+
+        LifeCycleProvider.authenticate(authentication);
 
         final EntityManager em = LifeCycleProvider.brokerManager();
         Query query = em.createQuery(PERSON_CRITERIA);
@@ -113,9 +114,10 @@ public class PersonService {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces(MediaType.TEXT_PLAIN)
-    public long createOrUpdatePerson(@HeaderParam("authorization") final String authentication,
+    public long createOrUpdatePerson(@HeaderParam("Authorization") final String authentication,
                                      @HeaderParam("SET-password") final String password,
                                      @NotNull @Valid final Person template) {
+        Person authorizedPerson = LifeCycleProvider.authenticate(authentication);
         boolean persistMode = template.getIdentity() == 0;
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
@@ -125,7 +127,11 @@ public class PersonService {
             } else {
                 person = em.find(Person.class, template.getIdentity());
                 if (person == null) {
-                    throw new NotFoundException();
+                    throw new ClientErrorException(Response.Status.UNAUTHORIZED);
+                }
+
+                if (person.compareTo(authorizedPerson) != 0) {
+                    throw new ClientErrorException(Response.Status.FORBIDDEN);
                 }
             }
 
@@ -149,8 +155,6 @@ public class PersonService {
                     em.persist(person);
                 }
                 em.getTransaction().commit();
-            } catch (PersistenceException pe) {
-                em.getTransaction().rollback();
             } finally {
                 em.getTransaction().begin();
             }
@@ -167,6 +171,7 @@ public class PersonService {
     @Path("{identity}")
     public Person getPerson(@HeaderParam("Authorization") final String authentication,
                             @PathParam("identity") final long identity) {
+        LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Person person = em.getReference(Person.class, identity);
@@ -182,6 +187,7 @@ public class PersonService {
     @Path("{identity}/auctions")
     public Collection<Auction> getAuctions(@HeaderParam("Authorization") final String authentication,
                                            @PathParam("identity") final long identity) {
+        LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
                 .append("select a.identity from Auction as a where ")
@@ -206,6 +212,7 @@ public class PersonService {
     @Path("{identity}/bids")
     public Collection<Bid> getBids(@HeaderParam("Authorization") final String authentication,
                                    @PathParam("identity") final long identity) {
+        LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
                 .append("select b.identity from Bid as b where ")

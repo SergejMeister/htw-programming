@@ -5,7 +5,6 @@ import com.htw.master.prog.broker.model.Person;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
-import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.RollbackException;
 import javax.validation.Valid;
@@ -57,7 +56,7 @@ public class AuctionService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Collection<Auction> getAuctions(
-            @HeaderParam("authorization") final String authentication,
+            @HeaderParam("Authorization") final String authentication,
             @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
             @DefaultValue("-1") @QueryParam("resultOffset") int resultOffset,
             @QueryParam("titleFragment") String titleFragment,
@@ -71,7 +70,7 @@ public class AuctionService {
             @QueryParam("upperCreationTimestamp") Long upperCreationTimestamp,
             @QueryParam("description") String description,
             @QueryParam("sellerReference") Long sellerReference) {
-
+        LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         Query query = em.createQuery(AUCTION_CRITERIA);
         query.setParameter("titleFragment", titleFragment);
@@ -106,8 +105,9 @@ public class AuctionService {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces(MediaType.TEXT_PLAIN)
-    public long createOrUpdateAuction(@HeaderParam("authorization") final String authentication,
+    public long createOrUpdateAuction(@HeaderParam("Authorization") final String authentication,
                                       @NotNull @Valid final Auction template) {
+        Person authorizedPerson = LifeCycleProvider.authenticate(authentication);
         if (template.isSealed()) {
             boolean persistMode = template.getIdentity() == 0;
             final EntityManager em = LifeCycleProvider.brokerManager();
@@ -120,6 +120,10 @@ public class AuctionService {
                     auction = em.find(Auction.class, template.getIdentity());
                     if (auction == null) {
                         throw new NotFoundException();
+                    }
+
+                    if (authorizedPerson.compareTo(auction.getSeller()) != 0) {
+                        throw new ClientErrorException(Response.Status.FORBIDDEN);
                     }
                 }
                 auction.setAskingPrice(template.getAskingPrice());
@@ -135,8 +139,6 @@ public class AuctionService {
                         em.persist(auction);
                     }
                     em.getTransaction().commit();
-                } catch (PersistenceException pe) {
-                    em.getTransaction().rollback();
                 } finally {
                     em.getTransaction().begin();
                 }
@@ -156,6 +158,7 @@ public class AuctionService {
     @Path("{identity}")
     public Auction getAuction(@HeaderParam("Authorization") final String authentication,
                               @PathParam("identity") final long identity) {
+        LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Auction auction = em.getReference(Auction.class, identity);

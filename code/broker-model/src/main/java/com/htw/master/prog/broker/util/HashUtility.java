@@ -11,16 +11,17 @@ public final class HashUtility {
 
     private static final String SHA_512 = "SHA-512";
     private static final String SHA_1 = "SHA-1";
+    private static final String SHA_256 = "SHA-256";
 
     private HashUtility() {
     }
 
     public static String hashAsString(String plain) {
-        return hash(plain, SHA_1);
+        return hash(plain, SHA_256);
     }
 
     public static byte[] hashAsByte(String plain) {
-        return hashToByte(plain, SHA_1);
+        return hashToByte(plain, SHA_256);
     }
 
     public static String hash(String plain, String algorithm) {
