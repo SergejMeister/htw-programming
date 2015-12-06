@@ -9,6 +9,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.Query;
 import javax.persistence.RollbackException;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
@@ -135,15 +136,18 @@ public class AuctionService {
                 auction.setUnitCount(template.getUnitCount());
                 auction.setVersion(template.getVersion());
 
-                //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
+                if (persistMode) {
+                    em.persist(auction);
+                }
                 try {
-                    if (persistMode) {
-                        em.persist(auction);
-                    }
                     em.getTransaction().commit();
                 } finally {
                     em.getTransaction().begin();
                 }
+                if (!persistMode) {
+                    em.getEntityManagerFactory().getCache().evict(Auction.class, template.getIdentity());
+                }
+
                 return auction.getIdentity();
             } catch (final EntityNotFoundException exception) {
                 throw new ClientErrorException(Response.Status.NOT_FOUND);
@@ -163,8 +167,7 @@ public class AuctionService {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
-            Auction auction = em.find(Auction.class, identity);
-            return auction;
+            return em.find(Auction.class, identity);
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
@@ -186,50 +189,49 @@ public class AuctionService {
     }
 
     @POST
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Consumes({MediaType.TEXT_PLAIN})
     @Path("{identity}/bid")
-    public Response updateBid(@HeaderParam("Authorization") final String authentication,
-                              @PathParam("identity") final long identity, @NotNull final Bid template) {
-        //@Valid - Bid.price erlaubt nur die Value groeßer 0
+    public void updateBid(@HeaderParam("Authorization") final String authentication,
+                          @PathParam("identity") final long identity, @Min(0) long price) {
         Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
-        Auction auction;
-        try {
-            auction = em.find(Auction.class, identity);
-        } catch (final EntityNotFoundException exception) {
-            throw new ClientErrorException(Response.Status.NOT_FOUND);
+        Auction auction = em.find(Auction.class, identity);
+        if (auction == null) {
+            throw new NotFoundException();
+        }
+        if (auction.isClosed() || auction.isSealed()) {
+            throw new ClientErrorException(Response.Status.CONFLICT);
         }
 
-        boolean persistMode = template.getIdentity() == 0;
-        try {
-            Bid bid;
+        Bid bid = auction.getBid(requester);
+        boolean persistMode = bid == null;
+        boolean isRemoveMode = price == 0;
 
-            if (persistMode) {
-                bid = new Bid(auction, requester);
-                if (template.getPrice() > 0) {
-                    bid.setPrice(template.getPrice());
-                }
-                em.persist(bid);
-            } else {
-                bid = em.find(Bid.class, template.getIdentity());
-                if (bid == null) {
-                    throw new ClientErrorException(Response.Status.NOT_FOUND);
-                }
-                if (template.getPrice() == 0) {
-                    em.remove(bid);
-                } else {
-                    //update
-                    if (template.getPrice() >= bid.getPrice()) {
-                        bid.setPrice(template.getPrice());
-
-                    }
-                }
+        if (persistMode) {
+            em.persist(new Bid(auction, requester, price));
+        } else {
+            //get Bid from second level cache, if not exist, than find in db.
+            bid = em.find(Bid.class, bid.getIdentity());
+            if (bid == null) {
+                throw new ClientErrorException(Response.Status.NOT_FOUND);
             }
+            if (isRemoveMode) {
+                em.remove(bid);
+            } else {
+                //update
+                bid.setPrice(price);
+            }
+        }
+
+        try {
             em.getTransaction().commit();
         } finally {
             em.getTransaction().begin();
         }
 
-        return Response.accepted().build();
+        if (persistMode || isRemoveMode) {
+            em.getEntityManagerFactory().getCache().evict(Person.class, requester.getIdentity());
+            em.getEntityManagerFactory().getCache().evict(Auction.class, auction.getIdentity());
+        }
     }
 }

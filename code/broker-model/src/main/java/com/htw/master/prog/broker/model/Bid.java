@@ -46,7 +46,11 @@ public class Bid extends BaseEntity {
     }
 
     public Bid(Auction auction, Person bidder) {
-        setPrice(1);
+        this(auction, bidder, 1);
+    }
+
+    public Bid(Auction auction, Person bidder, long price) {
+        setPrice(price);
         this.auction = auction;
         this.bidder = bidder;
     }

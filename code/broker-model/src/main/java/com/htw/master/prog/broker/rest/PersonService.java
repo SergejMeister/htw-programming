@@ -51,7 +51,7 @@ public class PersonService {
     @Path("healthcheck")
     @Produces(MediaType.TEXT_PLAIN)
     public String healthCheck() {
-        return "OK";
+        return "OK!";
     }
 
     @SuppressWarnings("unchecked")
@@ -159,15 +159,18 @@ public class PersonService {
             person.setVersion(template.getVersion());
             person.setGroup(template.getGroup());
 
-            //		em.getEntityManagerFactory().getCache().evict(Person.class, identity);
+            if (persistMode) {
+                em.persist(person);
+            }
             try {
-                if (persistMode) {
-                    em.persist(person);
-                }
                 em.getTransaction().commit();
             } finally {
                 em.getTransaction().begin();
             }
+            if (!persistMode) {
+                em.getEntityManagerFactory().getCache().evict(Person.class, template.getIdentity());
+            }
+
             return person.getIdentity();
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);

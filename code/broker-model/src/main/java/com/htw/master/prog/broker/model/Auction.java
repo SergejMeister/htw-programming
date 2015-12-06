@@ -154,6 +154,6 @@ public class Auction extends BaseEntity {
 
     @XmlElement
     public boolean isSealed() {
-        return 0 < bids.size() || isClosed();
+        return 0 < bids.size();
     }
 }
