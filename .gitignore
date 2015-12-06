@@ -1,6 +1,7 @@
 *.iml
 target
 .idea
+dependency-reduced-pom.xml
 
 
 # Created by https://www.gitignore.io/api/osx,java,eclipse,jetbrains,linux
