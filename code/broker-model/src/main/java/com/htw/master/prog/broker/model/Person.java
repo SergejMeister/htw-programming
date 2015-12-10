@@ -15,6 +15,7 @@ import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashSet;
@@ -122,17 +123,14 @@ public class Person extends BaseEntity {
         this.group = group;
     }
 
-    @XmlElement
     public Name getName() {
         return name;
     }
 
-    @XmlElement
     public Address getAddress() {
         return address;
     }
 
-    @XmlElement
     public Contact getContact() {
         return contact;
     }

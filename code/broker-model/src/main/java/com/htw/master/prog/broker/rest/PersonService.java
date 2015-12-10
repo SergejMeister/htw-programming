@@ -117,14 +117,14 @@ public class PersonService {
     public long createOrUpdatePerson(@HeaderParam("Authorization") final String authentication,
                                      @HeaderParam("SET-password") final String password,
                                      @NotNull @Valid final Person template) {
-        Person authorizedPerson = LifeCycleProvider.authenticate(authentication);
-        boolean persistMode = template.getIdentity() == 0;
+        boolean persistMode = template.getIdentity() == null ;
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Person person;
             if (persistMode) {
                 person = new Person(template.getGroup());
             } else {
+                Person authorizedPerson = LifeCycleProvider.authenticate(authentication);
                 person = em.find(Person.class, template.getIdentity());
                 if (person == null) {
                     throw new ClientErrorException(Response.Status.UNAUTHORIZED);

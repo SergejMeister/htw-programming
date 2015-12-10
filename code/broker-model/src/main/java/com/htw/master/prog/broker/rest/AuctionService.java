@@ -111,53 +111,55 @@ public class AuctionService {
     public long createOrUpdateAuction(@HeaderParam("Authorization") final String authentication,
                                       @NotNull @Valid final Auction template) {
         Person authorizedPerson = LifeCycleProvider.authenticate(authentication);
-        if (template.isSealed()) {
-            boolean persistMode = template.getIdentity() == 0;
-            final EntityManager em = LifeCycleProvider.brokerManager();
-            final Person requester = LifeCycleProvider.authenticate(authentication);
-            try {
-                Auction auction;
-                if (persistMode) {
-                    auction = new Auction(requester);
-                } else {
-                    auction = em.find(Auction.class, template.getIdentity());
-                    if (auction == null) {
-                        throw new NotFoundException();
-                    }
-
-                    if (authorizedPerson.compareTo(auction.getSeller()) != 0) {
-                        throw new ClientErrorException(Response.Status.FORBIDDEN);
-                    }
-                }
-                auction.setAskingPrice(template.getAskingPrice());
-                auction.setClosureTimestamp(template.getClosureTimestamp());
-                auction.setDescription(template.getDescription());
-                auction.setTitle(template.getTitle());
-                auction.setUnitCount(template.getUnitCount());
-                auction.setVersion(template.getVersion());
-
-                if (persistMode) {
-                    em.persist(auction);
-                }
-                try {
-                    em.getTransaction().commit();
-                } finally {
-                    em.getTransaction().begin();
-                }
-                if (!persistMode) {
-                    em.getEntityManagerFactory().getCache().evict(Auction.class, template.getIdentity());
+        boolean persistMode = template.getIdentity() == null;
+        final EntityManager em = LifeCycleProvider.brokerManager();
+        final Person requester = LifeCycleProvider.authenticate(authentication);
+        try {
+            Auction auction;
+            if (persistMode) {
+                auction = new Auction(requester);
+            } else {
+                auction = em.find(Auction.class, template.getIdentity());
+                if (auction == null) {
+                    throw new NotFoundException();
                 }
 
-                return auction.getIdentity();
-            } catch (final EntityNotFoundException exception) {
-                throw new ClientErrorException(Response.Status.NOT_FOUND);
-            } catch (final RollbackException exception) {
-                throw new ClientErrorException(Response.Status.CONFLICT);
+                if (authorizedPerson.compareTo(auction.getSeller()) != 0) {
+                    throw new ClientErrorException(Response.Status.FORBIDDEN);
+                }
+
+                if (auction.isSealed() || auction.isClosed()) {
+                    throw new ClientErrorException(Response.Status.CONFLICT);
+                }
             }
-        } else {
-            return template.getIdentity();
+
+            auction.setAskingPrice(template.getAskingPrice());
+            auction.setClosureTimestamp(template.getClosureTimestamp());
+            auction.setDescription(template.getDescription());
+            auction.setTitle(template.getTitle());
+            auction.setUnitCount(template.getUnitCount());
+            auction.setVersion(template.getVersion());
+
+            if (persistMode) {
+                em.persist(auction);
+            }
+            try {
+                em.getTransaction().commit();
+            } finally {
+                em.getTransaction().begin();
+            }
+            if (!persistMode) {
+                em.getEntityManagerFactory().getCache().evict(Auction.class, template.getIdentity());
+            }
+
+            return auction.getIdentity();
+        } catch (final EntityNotFoundException exception) {
+            throw new ClientErrorException(Response.Status.NOT_FOUND);
+        } catch (final RollbackException exception) {
+            throw new ClientErrorException(Response.Status.CONFLICT);
         }
     }
+
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -192,7 +194,8 @@ public class AuctionService {
     @Consumes({MediaType.TEXT_PLAIN})
     @Path("{identity}/bid")
     public void updateBid(@HeaderParam("Authorization") final String authentication,
-                          @PathParam("identity") final long identity, @Min(0) long price) {
+                          @PathParam("identity") final long identity,
+                          @Min(0) long price) {
         Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         Auction auction = em.find(Auction.class, identity);

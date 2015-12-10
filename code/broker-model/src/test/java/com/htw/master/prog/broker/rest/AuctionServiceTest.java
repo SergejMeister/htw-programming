@@ -5,8 +5,10 @@ import com.htw.master.prog.broker.model.Bid;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
@@ -55,6 +57,68 @@ public class AuctionServiceTest extends ServiceTest {
         Assert.assertNotNull(bid);
         Long expectedIdentity = 9L;
         Assert.assertEquals(expectedIdentity, bid.getIdentity());
+    }
+
+    @Test
+    public void testCreateOrUpdate() {
+        Auction template = new Auction();
+        template.setTitle("testAuction");
+        template.setUnitCount(2);
+        template.setAskingPrice(12.2);
+        template.setDescription("Das ist ein test");
+
+        WebTarget webTarget = newWebTarget("ines", "ines");
+        Entity<Auction> auctionEntity = Entity.entity(template, MediaType.APPLICATION_XML_TYPE);
+        Response response = webTarget.path(AUCTION_URL).request().put(auctionEntity);
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        long createdIdentity = response.readEntity(Long.class);
+        Assert.assertTrue(createdIdentity > 0);
+        getWasteBasket().add(createdIdentity);
+
+        webTarget = newWebTarget("ines", "ines");
+        response = webTarget.path(AUCTION_URL + "/" + createdIdentity).request().get();
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        Auction auction = response.readEntity(Auction.class);
+        Assert.assertEquals("testAuction", auction.getTitle());
+        Assert.assertEquals(2, auction.getUnitCount());
+        Assert.assertTrue(12.2 == auction.getAskingPrice());
+
+        //Update
+        auction.setTitle("updateTitle");
+        auctionEntity = Entity.entity(auction, MediaType.APPLICATION_XML_TYPE);
+        response = webTarget.path(AUCTION_URL).request().put(auctionEntity);
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+        //Get and test
+        webTarget = newWebTarget("ines", "ines");
+        response = webTarget.path(AUCTION_URL + "/" + createdIdentity).request().get();
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        auction = response.readEntity(Auction.class);
+        Assert.assertEquals("updateTitle", auction.getTitle());
+    }
+
+    @Test
+    public void testUpdateBid() {
+
+        Auction template = new Auction();
+        template.setTitle("testAuction");
+        template.setUnitCount(2);
+        template.setAskingPrice(12.2);
+        template.setDescription("Das ist ein test");
+
+        WebTarget webTarget = newWebTarget("ines", "ines");
+        Entity<Auction> personEntity = Entity.entity(template, MediaType.APPLICATION_XML_TYPE);
+        Response response = webTarget.path(AUCTION_URL).request().put(personEntity);
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        long createdIdentity = response.readEntity(Long.class);
+        getWasteBasket().add(createdIdentity);
+
+        webTarget = newWebTarget("sascha", "sascha");
+        long price = 15 ;
+        Entity<Long> priceEntity = Entity.entity(price, MediaType.TEXT_PLAIN);
+        response = webTarget.path(AUCTION_URL + "/" + createdIdentity + "/bid").request().post(priceEntity);
+        Assert.assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 
     @Test
