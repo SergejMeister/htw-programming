@@ -189,15 +189,12 @@ public class PersonService {
                             @PathParam("identity") final long identity) {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
-        try {
-            Person person = em.find(Person.class, identity);
-            if (person != null) {
-                return person;
-            }
-            throw new ClientErrorException(Response.Status.NOT_FOUND);
-        } catch (Exception exception) {
-            throw new ClientErrorException(Response.Status.BAD_REQUEST);
+        Person person = em.find(Person.class, identity);
+        if (person != null) {
+            return person;
         }
+
+        throw new ClientErrorException(Response.Status.NOT_FOUND);
     }
 
     @GET
