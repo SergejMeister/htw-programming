@@ -9,6 +9,7 @@ public final class FilterUtility {
 
     public static Auction filterClosed(Auction auction, Boolean closed) {
         if (auction == null) {
+            //throw new NullPointerException();
             return null;
         }
 

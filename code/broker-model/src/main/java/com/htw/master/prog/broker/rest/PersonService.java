@@ -191,9 +191,12 @@ public class PersonService {
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Person person = em.find(Person.class, identity);
-            return person;
-        } catch (final EntityNotFoundException exception) {
+            if (person != null) {
+                return person;
+            }
             throw new ClientErrorException(Response.Status.NOT_FOUND);
+        } catch (Exception exception) {
+            throw new ClientErrorException(Response.Status.BAD_REQUEST);
         }
     }
 
@@ -216,12 +219,11 @@ public class PersonService {
                                 @QueryParam("seller") Boolean seller) {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
-        String personCriteria = new StringBuilder()
-                .append("select a.identity from Auction as a where ")
-                .append("a.seller.identity = :personIdentity")
-                .toString();
+
+        String personCriteria = createSelectQuery(seller);
         Query query = em.createQuery(personCriteria);
         query.setParameter("personIdentity", identity);
+
         Collection<Long> identities = query.getResultList();
         Collection<Auction> auctions = new TreeSet<>(Comparator.comparing(Auction::getIdentity));
         for (Long auctionIdentity : identities) {
@@ -257,7 +259,32 @@ public class PersonService {
                 new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(),
                         new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsEntityFilter.Literal()};
         return Response.ok().entity(wrapper, filterAnnotations).build();
-//        return auctions;
+    }
+
+    private String createSelectQuery(Boolean seller) {
+        if (seller == null) {
+            return new StringBuilder()
+                    .append("select a.identity from Auction as a ")
+                    .append("left join a.bids  as b ")
+                    .append("where a.seller.identity = :personIdentity ")
+                    .append("or b.bidder.identity = :personIdentity")
+                    .toString();
+        } else {
+            if (seller) {
+                //only auction where person identity is seller
+                return new StringBuilder()
+                        .append("select a.identity from Auction as a ")
+                        .append("where a.seller.identity = :personIdentity")
+                        .toString();
+            } else {
+                //only auction where person identity is bidder
+                return new StringBuilder()
+                        .append("select a.identity from Auction as a ")
+                        .append("left join a.bids as b ")
+                        .append("where b.bidder.identity = :personIdentity ")
+                        .toString();
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -266,7 +293,6 @@ public class PersonService {
     @Path("{identity}/bids")
     @Bid.XmlBidderAsReferenceFilter
     @Bid.XmlAuctionAsReferenceFilter
-//    public Collection<Bid> getBids(@HeaderParam("Authorization") final String authentication,
     public Response getBids(@HeaderParam("Authorization") final String authentication,
                             @PathParam("identity") final long identity) {
         Person requester = LifeCycleProvider.authenticate(authentication);
@@ -300,7 +326,5 @@ public class PersonService {
         Annotation[] filterAnnotations =
                 new Annotation[]{new Bid.XmlAuctionAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal()};
         return Response.ok().entity(wrapper, filterAnnotations).build();
-
-//        return bids;
     }
 }

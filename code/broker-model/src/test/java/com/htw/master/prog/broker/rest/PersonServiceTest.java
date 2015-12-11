@@ -79,10 +79,11 @@ public class PersonServiceTest extends ServiceTest {
 
         //Get updated person and check group
         webTarget = newWebTarget("ines", "ines");
-        response = webTarget.path(PEOPLE_URL ).path(String.valueOf(createdIdentity)).request(MediaType.APPLICATION_XML).get();
+        response = webTarget.path(PEOPLE_URL).path(String.valueOf(createdIdentity)).request(MediaType.APPLICATION_XML)
+                .get();
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         person = response.readEntity(Person.class);
-        Assert.assertEquals(Group.ADMIN,person.getGroup());
+        Assert.assertEquals(Group.ADMIN, person.getGroup());
     }
 
     @Test
@@ -133,19 +134,57 @@ public class PersonServiceTest extends ServiceTest {
     }
 
     @Test
-    public void testGetAuctions() {
+    public void testGetPersonNotFoundException() {
+        WebTarget webTarget = newWebTarget("ines", "ines");
+        Response response = webTarget.path(PEOPLE_URL + "/12").request(MediaType.APPLICATION_XML).get();
+        Assert.assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    public void testGetAllRequesterAuctions() {
         WebTarget webTarget = newWebTarget("ines", "ines");
         Response response = webTarget.path(PEOPLE_URL + "/2/auctions").request(MediaType.APPLICATION_XML).get();
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         List<Auction> auctions = response.readEntity(new GenericType<List<Auction>>() {
         });
-        Assert.assertEquals("List size should be exact 3", 3, auctions.size());
+        Assert.assertEquals("List size should be exact 4", 4, auctions.size());
 
         Set<Long> resultIdentities = auctions.stream().map(Auction::getIdentity).collect(Collectors.toSet());
-        Assert.assertEquals("Set size should be exact 3", 3, resultIdentities.size());
+        Assert.assertEquals("Set size should be exact 4", 4, resultIdentities.size());
+        Assert.assertTrue(resultIdentities.contains(3L));
         Assert.assertTrue(resultIdentities.contains(5L));
         Assert.assertTrue(resultIdentities.contains(6L));
         Assert.assertTrue(resultIdentities.contains(7L));
+    }
+
+    @Test
+    public void testGetOnlySellerAuctions() {
+        WebTarget webTarget = newWebTarget("ines", "ines");
+        Response response = webTarget.path(PEOPLE_URL + "/2/auctions").queryParam("seller", "true").request(MediaType.APPLICATION_XML).get();
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<Auction> auctions = response.readEntity(new GenericType<List<Auction>>() {
+        });
+        Assert.assertEquals("List size should be exact 4", 3, auctions.size());
+
+        Set<Long> resultIdentities = auctions.stream().map(Auction::getIdentity).collect(Collectors.toSet());
+        Assert.assertEquals("Set size should be exact 4", 3, resultIdentities.size());
+        Assert.assertTrue(resultIdentities.contains(5L));
+        Assert.assertTrue(resultIdentities.contains(6L));
+        Assert.assertTrue(resultIdentities.contains(7L));
+    }
+
+    @Test
+    public void testGetOnlyBidderAuctions() {
+        WebTarget webTarget = newWebTarget("ines", "ines");
+        Response response = webTarget.path(PEOPLE_URL + "/2/auctions").queryParam("seller", "false").request(MediaType.APPLICATION_XML).get();
+        Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        List<Auction> auctions = response.readEntity(new GenericType<List<Auction>>() {
+        });
+        Assert.assertEquals("List size should be exact 1", 1, auctions.size());
+
+        Set<Long> resultIdentities = auctions.stream().map(Auction::getIdentity).collect(Collectors.toSet());
+        Assert.assertEquals("Set size should be exact 1", 1, resultIdentities.size());
+        Assert.assertTrue(resultIdentities.contains(3L));
     }
 
     @Test
