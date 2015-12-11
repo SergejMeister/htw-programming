@@ -5,6 +5,7 @@ import com.htw.master.prog.broker.enums.Group;
 import com.htw.master.prog.broker.model.Auction;
 import com.htw.master.prog.broker.model.Bid;
 import com.htw.master.prog.broker.model.Person;
+import com.htw.master.prog.broker.util.FilterUtility;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -22,8 +23,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
@@ -117,7 +120,7 @@ public class PersonService {
     public long createOrUpdatePerson(@HeaderParam("Authorization") final String authentication,
                                      @HeaderParam("SET-password") final String password,
                                      @NotNull @Valid final Person template) {
-        boolean persistMode = template.getIdentity() == null ;
+        boolean persistMode = template.getIdentity() == null;
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Person person;
@@ -205,8 +208,12 @@ public class PersonService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/auctions")
-    public Collection<Auction> getAuctions(@HeaderParam("Authorization") final String authentication,
-                                           @PathParam("identity") final long identity) {
+    @Bid.XmlAuctionAsReferenceFilter
+    @Bid.XmlBidderAsReferenceFilter
+    public Response getAuctions(@HeaderParam("Authorization") final String authentication,
+                                @PathParam("identity") final long identity,
+                                @QueryParam("closed") Boolean closed,
+                                @QueryParam("seller") Boolean seller) {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
@@ -219,19 +226,49 @@ public class PersonService {
         Collection<Auction> auctions = new TreeSet<>(Comparator.comparing(Auction::getIdentity));
         for (Long auctionIdentity : identities) {
             Auction auction = em.find(Auction.class, auctionIdentity);
+            auction = FilterUtility.filterClosed(auction, closed);
             if (auction != null) {
                 auctions.add(auction);
             }
+//            if (auction != null) {
+//                if (closed == null) {
+//                    auctions.add(auction);
+//                } else {
+//                    if (closed) {
+//                        if (auction.isClosed()) {
+//                            auctions.add(auction);
+//                        }
+//                    } else {
+//                        if (!auction.isClosed()) {
+//                            auctions.add(auction);
+//                        }
+//                    }
+//                }
+//            }
         }
-        return auctions;
+
+        GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(auctions) {
+        };
+        if (closed == null || !closed) {
+            return Response.ok().entity(wrapper).build();
+        }
+
+        Annotation[] filterAnnotations =
+                new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(),
+                        new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsEntityFilter.Literal()};
+        return Response.ok().entity(wrapper, filterAnnotations).build();
+//        return auctions;
     }
 
     @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/bids")
-    public Collection<Bid> getBids(@HeaderParam("Authorization") final String authentication,
-                                   @PathParam("identity") final long identity) {
+    @Bid.XmlBidderAsReferenceFilter
+    @Bid.XmlAuctionAsReferenceFilter
+//    public Collection<Bid> getBids(@HeaderParam("Authorization") final String authentication,
+    public Response getBids(@HeaderParam("Authorization") final String authentication,
+                            @PathParam("identity") final long identity) {
         Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         String personCriteria = new StringBuilder()
@@ -257,6 +294,13 @@ public class PersonService {
                 }
             }
         }
-        return bids;
+
+        GenericEntity<?> wrapper = new GenericEntity<Collection<Bid>>(bids) {
+        };
+        Annotation[] filterAnnotations =
+                new Annotation[]{new Bid.XmlAuctionAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal()};
+        return Response.ok().entity(wrapper, filterAnnotations).build();
+
+//        return bids;
     }
 }

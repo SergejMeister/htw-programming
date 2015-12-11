@@ -3,6 +3,7 @@ package com.htw.master.prog.broker.rest;
 import com.htw.master.prog.broker.model.Auction;
 import com.htw.master.prog.broker.model.Bid;
 import com.htw.master.prog.broker.model.Person;
+import com.htw.master.prog.broker.util.FilterUtility;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -23,8 +24,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
@@ -58,7 +61,8 @@ public class AuctionService {
     @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Collection<Auction> getAuctions(
+    @Auction.XmlSellerAsReferenceFilter
+    public Response getAuctions(
             @HeaderParam("Authorization") final String authentication,
             @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
             @DefaultValue("-1") @QueryParam("resultOffset") int resultOffset,
@@ -72,7 +76,8 @@ public class AuctionService {
             @QueryParam("lowerCreationTimestamp") Long lowerCreationTimestamp,
             @QueryParam("upperCreationTimestamp") Long upperCreationTimestamp,
             @QueryParam("description") String description,
-            @QueryParam("sellerReference") Long sellerReference) {
+            @QueryParam("sellerReference") Long sellerReference,
+            @QueryParam("closed") Boolean closed) {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         Query query = em.createQuery(AUCTION_CRITERIA);
@@ -94,15 +99,42 @@ public class AuctionService {
             query.setMaxResults(resultLength);
         }
         Collection<Long> identities = query.getResultList();
-        Collection<Auction> auctions = new TreeSet<>(Comparator.comparing(Auction::getIdentity));
+        Collection<Auction> result = new TreeSet<>(Comparator.comparing(Auction::getIdentity));
         for (Long identity : identities) {
             Auction auction = em.find(Auction.class, identity);
+            auction = FilterUtility.filterClosed(auction, closed);
             if (auction != null) {
-                auctions.add(auction);
+                result.add(auction);
             }
+
+//            if (auction != null) {
+//                if (closed == null) {
+//                    result.add(auction);
+//                } else {
+//                    if (closed) {
+//                        if (auction.isClosed()) {
+//                            result.add(auction);
+//                        }
+//                    } else {
+//                        if (!auction.isClosed()) {
+//                            result.add(auction);
+//                        }
+//                    }
+//                }
+//            }
         }
 
-        return auctions;
+        GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(result) {
+        };
+        if (upperClosureTimestamp == null || upperClosureTimestamp > System.currentTimeMillis()) {
+            return Response.ok(wrapper).build();
+        }
+
+//        Annotation[] filterAnnotations =
+//                new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal(),
+//                        new Bid.XmlAuctionAsEntityFilter.Literal()};
+        Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlSellerAsEntityFilter.Literal()};
+        return Response.ok().entity(wrapper, filterAnnotations).build();
     }
 
     @PUT
@@ -164,12 +196,19 @@ public class AuctionService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}")
-    public Auction getAuction(@HeaderParam("Authorization") final String authentication,
-                              @PathParam("identity") final long identity) {
+//    @Auction.XmlSellerAsReferenceFilter
+    @Bid.XmlAuctionAsReferenceFilter
+    @Bid.XmlBidderAsReferenceFilter
+    public Response getAuction(@HeaderParam("Authorization") final String authentication,
+                               @PathParam("identity") final long identity) {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
-            return em.find(Auction.class, identity);
+            Auction auction = em.find(Auction.class, identity);
+//            Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsEntityFilter.Literal()};
+            Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(),
+                    new Bid.XmlBidderAsEntityFilter.Literal()};
+            return Response.ok().entity(auction, filterAnnotations).build();
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
@@ -178,13 +217,23 @@ public class AuctionService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/bid")
-    public Bid getBidOfRequester(@HeaderParam("Authorization") final String authentication,
-                                 @PathParam("identity") final long identity) {
+//    @Bid.XmlBidderAsReferenceFilter
+    @Bid.XmlAuctionAsReferenceFilter
+    public Response getBidOfRequester(@HeaderParam("Authorization") final String authentication,
+                                      @PathParam("identity") final long identity) {
         Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Auction auction = em.find(Auction.class, identity);
-            return requester.getBid(auction);
+            Bid bid = requester.getBid(auction);
+            if (bid == null) {
+                throw new ClientErrorException(Response.Status.NOT_FOUND);
+            }
+//            Annotation[] filterAnnotations = new Annotation[]{new Bid.XmlBidderAsEntityFilter.Literal(),
+//                    new Bid.XmlAuctionAsEntityFilter.Literal()};
+//            Annotation[] filterAnnotations = new Annotation[]{new Bid.XmlBidderAsEntityFilter.Literal()};
+            Annotation[] filterAnnotations = new Annotation[]{new Bid.XmlAuctionAsEntityFilter.Literal()};
+            return Response.ok().entity(bid, filterAnnotations).build();
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }

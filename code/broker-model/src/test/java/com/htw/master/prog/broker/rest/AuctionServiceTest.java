@@ -125,6 +125,6 @@ public class AuctionServiceTest extends ServiceTest {
     public void testGetBidOfRequesterNotFound() {
         WebTarget webTarget = newWebTarget("ines", "ines");
         Response response = webTarget.path(AUCTION_URL + "/7/bid").request().get();
-        Assert.assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        Assert.assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 }

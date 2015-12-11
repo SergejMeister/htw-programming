@@ -1,7 +1,9 @@
 package com.htw.master.prog.broker.model;
 
 import de.sb.java.validation.Inequal;
+import org.glassfish.jersey.message.filtering.EntityFiltering;
 
+import javax.enterprise.util.AnnotationLiteral;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,6 +18,10 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -64,9 +70,9 @@ public class Auction extends BaseEntity {
     @Size(min = 1, max = 8189)
     private String description;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sellerReference", nullable = false, updatable = false, insertable = true)
-    @NotNull
     private Person seller;
 
     public Auction() {
@@ -122,15 +128,20 @@ public class Auction extends BaseEntity {
         this.description = description;
     }
 
+    @XmlElement
+    @XmlSellerAsEntityFilter
     public Person getSeller() {
         return seller;
     }
 
     @XmlElement
+    @XmlSellerAsReferenceFilter
     public long getSellerReference() {
         return seller == null ? 0 : seller.getIdentity();
     }
 
+    @XmlElement
+    @XmlBidsAsEntityFilter
     public Set<Bid> getBids() {
         return bids;
     }
@@ -155,5 +166,43 @@ public class Auction extends BaseEntity {
     @XmlElement
     public boolean isSealed() {
         return 0 < bids.size() || isClosed();
+    }
+
+    /**
+     * Filter annotation for associated sellers marshaled as entities.
+     */
+    @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @EntityFiltering
+    @SuppressWarnings("all")
+    static public @interface XmlSellerAsEntityFilter {
+        static final class Literal extends AnnotationLiteral<XmlSellerAsEntityFilter>
+                implements XmlSellerAsEntityFilter {
+        }
+    }
+
+    /**
+     * Filter annotation for associated sellers marshaled as references.
+     */
+    @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @EntityFiltering
+    @SuppressWarnings("all")
+    static public @interface XmlSellerAsReferenceFilter {
+        static final class Literal extends AnnotationLiteral<XmlSellerAsReferenceFilter>
+                implements XmlSellerAsReferenceFilter {
+        }
+    }
+
+    /**
+     * Filter annotation for associated bids marshaled as entities.
+     */
+    @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @EntityFiltering
+    @SuppressWarnings("all")
+    static public @interface XmlBidsAsEntityFilter {
+        static final class Literal extends AnnotationLiteral<XmlBidsAsEntityFilter> implements XmlBidsAsEntityFilter {
+        }
     }
 }
