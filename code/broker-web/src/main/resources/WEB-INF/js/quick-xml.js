@@ -36,7 +36,7 @@ this.de.sb.util = this.de.sb.util || {};
 			var xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
 			if (object === null) return xmlHeader;
 			return xmlHeader + recursiveMarshal(rootElementName, object);
-		}
+		};
 
 
 		/**
@@ -54,7 +54,7 @@ this.de.sb.util = this.de.sb.util || {};
 			var dom = new DOMParser().parseFromString(xml, "text/xml");
 			var domRootElement = dom.childNodes[0];
 			return recursiveUnmarshal(domRootElement);
-		}
+		};
 
 
 		/**
@@ -128,5 +128,5 @@ this.de.sb.util = this.de.sb.util || {};
 
 			return result;
 		}
-	}
+	};
 } ());
