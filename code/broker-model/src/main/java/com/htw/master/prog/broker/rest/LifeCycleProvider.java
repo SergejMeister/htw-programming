@@ -103,7 +103,7 @@ public class LifeCycleProvider implements ContainerRequestFilter, ContainerRespo
         return entityManager;
     }
 
-    /**
+    /**AJAX Auction Broker System
      * Returns the authenticated requester (a person) for the given RFC 2617 "Basic" authentication.
      * This operation first decodes user alias and password from an authentication value. Then an
      * SHA-256 hash-code is calculated for the password. Finally, the latter is used in conjunction
