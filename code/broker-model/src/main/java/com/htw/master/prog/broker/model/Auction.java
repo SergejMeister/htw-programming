@@ -25,8 +25,10 @@ import java.lang.annotation.Target;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -41,7 +43,7 @@ import java.util.Set;
 public class Auction extends BaseEntity {
 
     @OneToMany(mappedBy = "auction", cascade = CascadeType.REMOVE)
-    private final Set<Bid> bids;
+    private final List<Bid> bids;
 
     @XmlElement
     @NotNull
@@ -80,7 +82,7 @@ public class Auction extends BaseEntity {
     }
 
     public Auction(Person seller) {
-        this.bids = new HashSet<>();
+        this.bids = new ArrayList<>();
         this.seller = seller;
         setUnitCount(1);
         setAskingPrice(1.0);
@@ -142,7 +144,7 @@ public class Auction extends BaseEntity {
 
     @XmlElement
     @XmlBidsAsEntityFilter
-    public Set<Bid> getBids() {
+    public List<Bid> getBids() {
         return bids;
     }
 

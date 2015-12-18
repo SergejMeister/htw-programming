@@ -32,6 +32,7 @@ import java.util.Date;
 @DiscriminatorColumn(name = "discriminator")
 public abstract class BaseEntity implements Comparable, Serializable {
 
+    //@XmlElement
     @XmlID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

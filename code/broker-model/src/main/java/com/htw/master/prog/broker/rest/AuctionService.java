@@ -126,15 +126,16 @@ public class AuctionService {
 
         GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(result) {
         };
-        if (upperClosureTimestamp == null || upperClosureTimestamp > System.currentTimeMillis()) {
-            return Response.ok(wrapper).build();
-        }
+        Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlSellerAsEntityFilter.Literal()};
+        return Response.ok().entity(wrapper, filterAnnotations).build();
+//        if (upperClosureTimestamp == null || upperClosureTimestamp > System.currentTimeMillis()) {
+//            return Response.ok(wrapper).build();
+//        }
 
 //        Annotation[] filterAnnotations =
 //                new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal(),
 //                        new Bid.XmlAuctionAsEntityFilter.Literal()};
-        Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlSellerAsEntityFilter.Literal()};
-        return Response.ok().entity(wrapper, filterAnnotations).build();
+
     }
 
     @PUT

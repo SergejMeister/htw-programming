@@ -44,7 +44,6 @@ public class Person extends BaseEntity {
     @Column(unique = true, nullable = false, updatable = true)
     private String alias;
 
-    @XmlElement
     @NotNull
     @Column(nullable = false, updatable = true)
     private byte[] passwordHash;
