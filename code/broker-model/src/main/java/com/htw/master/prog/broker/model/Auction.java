@@ -27,9 +27,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Entity Auction.
@@ -160,12 +158,12 @@ public class Auction extends BaseEntity {
         //                return result.isPresent() ? result.get() : null;
     }
 
-    @XmlElement
+    @XmlElement(name = "closed")
     public boolean isClosed() {
         return new Date().after(getClosureTimestamp());
     }
 
-    @XmlElement
+    @XmlElement(name = "sealed")
     public boolean isSealed() {
         return 0 < bids.size() || isClosed();
     }

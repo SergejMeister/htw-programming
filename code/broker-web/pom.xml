@@ -12,52 +12,8 @@
     <artifactId>broker-web</artifactId>
     <packaging>war</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.htw.master</groupId>
-            <artifactId>broker-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.htw.master</groupId>
-            <artifactId>broker-group</artifactId>
-            <version>${project.version}</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../libs/java-util-1.1.3.jar</systemPath>
-        </dependency>
-    </dependencies>
-
     <build>
         <finalName>broker-web</finalName>
-        <plugins>
-            <!-- For Maven Tomcat Plugin -->
-            <plugin>
-                <groupId>org.apache.tomcat.maven</groupId>
-                <artifactId>tomcat7-maven-plugin</artifactId>
-                <version>2.2</version>
-                <configuration>
-                    <path>/</path>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <webResources>
-                        <resource>
-                            <directory>${basedir}/src/main/webapp/WEB-INF</directory>
-                            <filtering>true</filtering>
-                            <targetPath>WEB-INF</targetPath>
-                            <!--<includes>-->
-                            <!--<include>**/xmlgateway-context.xml</include>-->
-                            <!--</includes>-->
-                        </resource>
-                    </webResources>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
 </project>

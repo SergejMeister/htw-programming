@@ -229,21 +229,6 @@ public class PersonService {
             if (auction != null) {
                 auctions.add(auction);
             }
-//            if (auction != null) {
-//                if (closed == null) {
-//                    auctions.add(auction);
-//                } else {
-//                    if (closed) {
-//                        if (auction.isClosed()) {
-//                            auctions.add(auction);
-//                        }
-//                    } else {
-//                        if (!auction.isClosed()) {
-//                            auctions.add(auction);
-//                        }
-//                    }
-//                }
-//            }
         }
 
         GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(auctions) {

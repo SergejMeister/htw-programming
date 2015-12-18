@@ -61,7 +61,7 @@ public class AuctionService {
     @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Auction.XmlSellerAsReferenceFilter
+//    @Auction.XmlSellerAsReferenceFilter
     public Response getAuctions(
             @HeaderParam("Authorization") final String authentication,
             @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
@@ -106,28 +106,15 @@ public class AuctionService {
             if (auction != null) {
                 result.add(auction);
             }
-
-//            if (auction != null) {
-//                if (closed == null) {
-//                    result.add(auction);
-//                } else {
-//                    if (closed) {
-//                        if (auction.isClosed()) {
-//                            result.add(auction);
-//                        }
-//                    } else {
-//                        if (!auction.isClosed()) {
-//                            result.add(auction);
-//                        }
-//                    }
-//                }
-//            }
         }
 
         GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(result) {
         };
-        Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlSellerAsEntityFilter.Literal()};
-        return Response.ok().entity(wrapper, filterAnnotations).build();
+//        Annotation[] filterAnnotations = new Annotation[]{
+//                new Auction.XmlSellerAsEntityFilter.Literal()
+//        };
+//        return Response.ok().entity(wrapper, filterAnnotations).build();
+        return Response.ok().entity(wrapper).build();
 //        if (upperClosureTimestamp == null || upperClosureTimestamp > System.currentTimeMillis()) {
 //            return Response.ok(wrapper).build();
 //        }
