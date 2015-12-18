@@ -208,8 +208,6 @@ public class PersonService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/auctions")
-    @Bid.XmlAuctionAsReferenceFilter
-    @Bid.XmlBidderAsReferenceFilter
     public Response getAuctions(@HeaderParam("Authorization") final String authentication,
                                 @PathParam("identity") final long identity,
                                 @QueryParam("closed") Boolean closed,
@@ -229,32 +227,22 @@ public class PersonService {
             if (auction != null) {
                 auctions.add(auction);
             }
-//            if (auction != null) {
-//                if (closed == null) {
-//                    auctions.add(auction);
-//                } else {
-//                    if (closed) {
-//                        if (auction.isClosed()) {
-//                            auctions.add(auction);
-//                        }
-//                    } else {
-//                        if (!auction.isClosed()) {
-//                            auctions.add(auction);
-//                        }
-//                    }
-//                }
-//            }
         }
 
         GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(auctions) {
         };
         if (closed == null || !closed) {
-            return Response.ok().entity(wrapper).build();
+            if (seller) {
+                Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlSellerAsReferenceFilter.Literal()};
+                return Response.ok().entity(wrapper, filterAnnotations).build();
+            } else {
+                return Response.ok().entity(wrapper).build();
+            }
         }
 
         Annotation[] filterAnnotations =
                 new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(),
-                        new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsEntityFilter.Literal()};
+                        new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsReferenceFilter.Literal()};
         return Response.ok().entity(wrapper, filterAnnotations).build();
     }
 

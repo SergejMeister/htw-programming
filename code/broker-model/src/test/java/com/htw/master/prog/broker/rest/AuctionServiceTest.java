@@ -68,8 +68,8 @@ public class AuctionServiceTest extends ServiceTest {
         template.setDescription("Das ist ein test");
 
         WebTarget webTarget = newWebTarget("ines", "ines");
-        Entity<Auction> auctionEntity = Entity.entity(template, MediaType.APPLICATION_XML_TYPE);
-        Response response = webTarget.path(AUCTION_URL).request().put(auctionEntity);
+        Entity<Auction> auctionEntity = Entity.entity(template, MediaType.APPLICATION_JSON);
+        Response response = webTarget.path(AUCTION_URL).request(MediaType.TEXT_PLAIN).put(auctionEntity);
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         long createdIdentity = response.readEntity(Long.class);

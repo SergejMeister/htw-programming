@@ -72,7 +72,7 @@ public class Bid extends BaseEntity {
 
     @XmlElement
     @XmlAuctionAsEntityFilter
-    //TODO without XmlTransient I have always an infinity loop exception bid->auction->bid
+//    @XmlTransient(sinnlos weil ignoriert marshaling)
     @XmlTransient
     public Auction getAuction() {
         return auction;
