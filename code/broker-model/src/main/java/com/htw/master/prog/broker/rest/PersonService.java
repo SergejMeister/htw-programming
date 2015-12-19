@@ -208,6 +208,7 @@ public class PersonService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/auctions")
+    @Auction.XmlSellerAsReferenceFilter
     @Bid.XmlAuctionAsReferenceFilter
     @Bid.XmlBidderAsReferenceFilter
     public Response getAuctions(@HeaderParam("Authorization") final String authentication,
@@ -238,8 +239,12 @@ public class PersonService {
         }
 
         Annotation[] filterAnnotations =
-                new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(),
-                        new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsEntityFilter.Literal()};
+                new Annotation[]{
+                        new Auction.XmlBidsAsEntityFilter.Literal(),
+                        new Bid.XmlBidderAsEntityFilter.Literal(),
+                        new Bid.XmlAuctionAsEntityFilter.Literal(),
+                        new Auction.XmlSellerAsEntityFilter.Literal()
+                };
         return Response.ok().entity(wrapper, filterAnnotations).build();
     }
 

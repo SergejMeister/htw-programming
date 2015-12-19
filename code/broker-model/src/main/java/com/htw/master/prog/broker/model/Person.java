@@ -2,6 +2,7 @@ package com.htw.master.prog.broker.model;
 
 import com.htw.master.prog.broker.enums.Group;
 import com.htw.master.prog.broker.util.HashUtility;
+import org.eclipse.persistence.annotations.CacheIndex;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,9 +16,9 @@ import javax.persistence.Table;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +43,7 @@ public class Person extends BaseEntity {
     @NotNull
     @Size(min = 1, max = 16, message = "An event's person alias must contain between 2 and 80 characters.")
     @Column(unique = true, nullable = false, updatable = true)
+    @CacheIndex(updateable = true)
     private String alias;
 
     @NotNull
@@ -90,10 +92,12 @@ public class Person extends BaseEntity {
         return HashUtility.hashAsByte(password);
     }
 
+    @XmlTransient
     public Set<Auction> getAuctions() {
         return auctions;
     }
 
+    @XmlTransient
     public Set<Bid> getBids() {
         return bids;
     }
@@ -134,6 +138,7 @@ public class Person extends BaseEntity {
         return contact;
     }
 
+    @XmlTransient
     public Bid getBid(Auction auction) {
         for (Bid bid : bids) {
             for (Bid auctionBid : auction.getBids()) {

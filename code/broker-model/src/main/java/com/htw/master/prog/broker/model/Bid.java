@@ -16,7 +16,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -70,10 +69,9 @@ public class Bid extends BaseEntity {
         this.price = price;
     }
 
-    @XmlElement
+    // TODO wit XmlElement I have always an infinity loop exception bid->auction->bid
+    // @XmlElement
     @XmlAuctionAsEntityFilter
-    //TODO without XmlTransient I have always an infinity loop exception bid->auction->bid
-    @XmlTransient
     public Auction getAuction() {
         return auction;
     }
@@ -120,8 +118,6 @@ public class Bid extends BaseEntity {
         static final class Literal extends AnnotationLiteral<XmlBidderAsReferenceFilter>
                 implements XmlBidderAsReferenceFilter {
         }
-
-        ;
     }
 
     /**

@@ -1,6 +1,3 @@
-/**
- * Created by sergej on 12/17/15.
- */
 "use strict";
 
 this.de = this.de || {};
@@ -42,9 +39,7 @@ this.de.sb.broker = this.de.sb.broker || {};
     de.sb.broker.ClosedAuctionsController.prototype.displaySellerAuctions = function () {
 
         var self = this;
-        //var url = '/services/auctions?sellerReference=' + 1 + '&closed=true';
-        var userIdentity = 1;
-        var url = '/services/people/' + userIdentity + '/auctions?seller=true&closed=true';
+        var url = '/services/people/' + this.sessionContext.user.identity + '/auctions?seller=true&closed=true';
         de.sb.util.AJAX.invoke(url, 'GET', {"Accept": 'application/json'}, null, this.sessionContext, function (request) {
             self.displayStatus(request.status, request.statusText);
             if (request.status === 200) {
@@ -57,6 +52,7 @@ this.de.sb.broker = this.de.sb.broker || {};
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
                         rowData.winPrice = winnerBid.price / 100;
+                        rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
                     }
 
                     var row = document.createElement('tr');
@@ -80,9 +76,7 @@ this.de.sb.broker = this.de.sb.broker || {};
      */
     de.sb.broker.ClosedAuctionsController.prototype.displayBidderAuctions = function () {
 
-        //TODO replace by user.identity from sessionContext.
-        var userIdentity = 1;
-        var url = '/services/people/' + userIdentity + '/auctions?seller=false&closed=true';
+        var url = '/services/people/' + this.sessionContext.user.identity + '/auctions?seller=false&closed=true';
         var self = this;
         de.sb.util.AJAX.invoke(url, 'GET', {"Accept": 'application/json'}, null, this.sessionContext, function (request) {
             self.displayStatus(request.status, request.statusText);
@@ -96,6 +90,7 @@ this.de.sb.broker = this.de.sb.broker || {};
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
                         rowData.winPrice = winnerBid.price / 100;
+                        rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
                     }
 
                     var ownerBid = self.getOwnerBid(auction.bids, self.sessionContext.user.alias);
@@ -118,7 +113,6 @@ this.de.sb.broker = this.de.sb.broker || {};
         });
     };
 
-    //TODO replace with identity
     de.sb.broker.ClosedAuctionsController.prototype.getOwnerBid = function (bids, alias) {
         if (bids) {
             for (var i = 0; i < bids.length; ++i) {
@@ -146,10 +140,10 @@ this.de.sb.broker = this.de.sb.broker || {};
     de.sb.broker.ClosedAuctionsController.prototype.initAuctionRowData = function (auction) {
 
         var auctionRowData = {};
-        auctionRowData.sellerName = '';
+        auctionRowData.sellerName = auction.seller.name.given;
         auctionRowData.winName = '';
         auctionRowData.winPrice = 0;
-        auctionRowData.beginn = '';
+        auctionRowData.beginn = new de.sb.util.Date().toGermanString(auction.creationTimestamp);
         auctionRowData.end = '';
         auctionRowData.title = auction.title;
         auctionRowData.unitCount = auction.unitCount;

@@ -63,7 +63,6 @@ public class ApplicationContainer {
         // type used is Oracle/OpenJDK-specific. Other HTTP server types more suitable for production environments are
         // available, such as Apache Tomcat, Grizzly, Simple, etc.
         final ResourceConfig configuration = new ResourceConfig()
-//                .register(PersonService.class);
                 .packages(ApplicationContainer.class.getPackage().toString())
                 .register(MoxyJsonFeature.class)    // edit "network.http.accept.default" in Firefox's "about:config"
                 .register(MoxyXmlFeature.class)        // to make "application/json" preferable to "application/xml"

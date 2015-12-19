@@ -61,7 +61,7 @@ public class AuctionService {
     @SuppressWarnings("unchecked")
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-//    @Auction.XmlSellerAsReferenceFilter
+    @Auction.XmlSellerAsReferenceFilter
     public Response getAuctions(
             @HeaderParam("Authorization") final String authentication,
             @DefaultValue("-1") @QueryParam("resultLength") int resultLength,
@@ -110,18 +110,12 @@ public class AuctionService {
 
         GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(result) {
         };
-//        Annotation[] filterAnnotations = new Annotation[]{
-//                new Auction.XmlSellerAsEntityFilter.Literal()
-//        };
-//        return Response.ok().entity(wrapper, filterAnnotations).build();
-        return Response.ok().entity(wrapper).build();
-//        if (upperClosureTimestamp == null || upperClosureTimestamp > System.currentTimeMillis()) {
-//            return Response.ok(wrapper).build();
-//        }
-
-//        Annotation[] filterAnnotations =
-//                new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal(),
-//                        new Bid.XmlAuctionAsEntityFilter.Literal()};
+        Annotation[] filterAnnotations = new Annotation[]{
+                new Auction.XmlBidsAsEntityFilter.Literal(),
+                new Bid.XmlBidderAsEntityFilter.Literal(),
+                new Bid.XmlAuctionAsReferenceFilter.Literal()
+        };
+        return Response.ok().entity(wrapper, filterAnnotations).build();
 
     }
 
@@ -184,19 +178,15 @@ public class AuctionService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}")
-//    @Auction.XmlSellerAsReferenceFilter
     @Bid.XmlAuctionAsReferenceFilter
     @Bid.XmlBidderAsReferenceFilter
-    public Response getAuction(@HeaderParam("Authorization") final String authentication,
-                               @PathParam("identity") final long identity) {
+    public Auction getAuction(@HeaderParam("Authorization") final String authentication,
+                              @PathParam("identity") final long identity) {
         LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
             Auction auction = em.find(Auction.class, identity);
-//            Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(), new Bid.XmlBidderAsEntityFilter.Literal(), new Bid.XmlAuctionAsEntityFilter.Literal()};
-            Annotation[] filterAnnotations = new Annotation[]{new Auction.XmlBidsAsEntityFilter.Literal(),
-                    new Bid.XmlBidderAsEntityFilter.Literal()};
-            return Response.ok().entity(auction, filterAnnotations).build();
+            return auction;
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
@@ -205,10 +195,10 @@ public class AuctionService {
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Path("{identity}/bid")
-//    @Bid.XmlBidderAsReferenceFilter
+    @Bid.XmlBidderAsReferenceFilter
     @Bid.XmlAuctionAsReferenceFilter
-    public Response getBidOfRequester(@HeaderParam("Authorization") final String authentication,
-                                      @PathParam("identity") final long identity) {
+    public Bid getBidOfRequester(@HeaderParam("Authorization") final String authentication,
+                                 @PathParam("identity") final long identity) {
         Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         try {
@@ -217,11 +207,8 @@ public class AuctionService {
             if (bid == null) {
                 throw new ClientErrorException(Response.Status.NOT_FOUND);
             }
-//            Annotation[] filterAnnotations = new Annotation[]{new Bid.XmlBidderAsEntityFilter.Literal(),
-//                    new Bid.XmlAuctionAsEntityFilter.Literal()};
-//            Annotation[] filterAnnotations = new Annotation[]{new Bid.XmlBidderAsEntityFilter.Literal()};
-            Annotation[] filterAnnotations = new Annotation[]{new Bid.XmlAuctionAsEntityFilter.Literal()};
-            return Response.ok().entity(bid, filterAnnotations).build();
+
+            return bid;
         } catch (final EntityNotFoundException exception) {
             throw new ClientErrorException(Response.Status.NOT_FOUND);
         }
