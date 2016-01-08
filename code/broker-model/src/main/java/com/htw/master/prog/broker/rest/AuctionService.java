@@ -111,9 +111,7 @@ public class AuctionService {
         GenericEntity<?> wrapper = new GenericEntity<Collection<Auction>>(result) {
         };
         Annotation[] filterAnnotations = new Annotation[]{
-                new Auction.XmlBidsAsEntityFilter.Literal(),
-                new Bid.XmlBidderAsEntityFilter.Literal(),
-                new Bid.XmlAuctionAsReferenceFilter.Literal()
+                new Auction.XmlSellerAsEntityFilter.Literal()
         };
         return Response.ok().entity(wrapper, filterAnnotations).build();
 

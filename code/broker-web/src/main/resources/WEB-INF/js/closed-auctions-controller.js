@@ -53,7 +53,7 @@ this.de.sb.broker = this.de.sb.broker || {};
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
                         rowData.winPrice = winnerBid.price / 100;
-                        rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
+                        //rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
                     }
 
                     var row = document.createElement('tr');
@@ -97,7 +97,7 @@ this.de.sb.broker = this.de.sb.broker || {};
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
                         rowData.winPrice = winnerBid.price / 100;
-                        rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
+                        //rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
                     }
 
                     var ownerBid = self.getOwnerBid(auction.bids, self.sessionContext.user.alias);
@@ -166,7 +166,8 @@ this.de.sb.broker = this.de.sb.broker || {};
         auctionRowData.winName = '';
         auctionRowData.winPrice = 0;
         auctionRowData.beginn = new de.sb.util.Date().toGermanString(auction.creationTimestamp);
-        auctionRowData.end = '';
+        //auctionRowData.end = '';
+        auctionRowData.end = new de.sb.util.Date().toGermanString(auction.closureTimestamp);
         auctionRowData.title = auction.title;
         auctionRowData.unitCount = auction.unitCount;
         auctionRowData.minPrice = auction.askingPrice / 100;
