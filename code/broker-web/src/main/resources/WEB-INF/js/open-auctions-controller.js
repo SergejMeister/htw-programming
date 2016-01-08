@@ -54,6 +54,8 @@ this.de.sb.broker = this.de.sb.broker || {};
                     document.querySelector('section.open-auctions tbody').appendChild(row);
                 }
             }
+
+            self.displayStatus(request.status, request.statusText)
         });
     };
 
