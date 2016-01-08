@@ -50,6 +50,17 @@ this.de.sb.broker = this.de.sb.broker || {};
         return cellWinner;
     };
 
+    /**
+     * Create table td element.
+     */
+    de.sb.broker.Controller.prototype.createPersonNameCell = function (name, title) {
+        var cellWinner = document.createElement("td");
+        var nameNode = document.createTextNode(name);
+        cellWinner.title = title;
+        cellWinner.appendChild(nameNode);
+        return cellWinner;
+    };
+
 
     /**
      * Displays the given HTTP status.

@@ -57,21 +57,18 @@ this.de.sb.broker = this.de.sb.broker || {};
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
                         rowData.winTitle = winnerBid.bidder.name.given + ' ' + winnerBid.bidder.name.family + ' (' + winnerBid.bidder.contact.email + ')';
-                        rowData.winPrice = winnerBid.price / 100;
+                        var winPrice = winnerBid.price / 100;
+                        rowData.winPrice = winPrice.toFixed(2);
                     }
 
                     var row = document.createElement('tr');
-                    row.appendChild(self.createPeronNameCell(rowData.winName, rowData.winTitle));
+                    row.appendChild(SUPER.prototype.createPersonNameCell(rowData.winName, rowData.winTitle));
                     row.appendChild(SUPER.prototype.createCell(rowData.beginn));
                     row.appendChild(SUPER.prototype.createCell(rowData.end));
                     row.appendChild(SUPER.prototype.createCell(rowData.title));
                     row.appendChild(SUPER.prototype.createCell(rowData.unitCount));
                     row.appendChild(SUPER.prototype.createCell(rowData.minPrice.toFixed(2)));
-                    if (rowData.winPrice === 0) {
-                        row.appendChild(SUPER.prototype.createCell(''));
-                    } else {
-                        row.appendChild(SUPER.prototype.createCell(rowData.winPrice.toFixed(2)));
-                    }
+                    row.appendChild(SUPER.prototype.createCell(rowData.winPrice));
 
                     document.querySelector('section.closed-seller-auctions tbody').appendChild(row);
                 }
@@ -99,7 +96,8 @@ this.de.sb.broker = this.de.sb.broker || {};
                     var winnerBid = self.getWinnerBid(auction.bids);
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
-                        rowData.winPrice = winnerBid.price / 100;
+                        var winPrice = winnerBid.price / 100;
+                        rowData.winPrice = winPrice.toFixed(2);
                         rowData.winTitle = winnerBid.bidder.name.given + ' ' + winnerBid.bidder.name.family + ' (' + winnerBid.bidder.contact.email + ')';
                     }
 
@@ -107,20 +105,15 @@ this.de.sb.broker = this.de.sb.broker || {};
                     rowData.bidPrice = ownerBid.price / 100;
 
                     var row = document.createElement('tr');
-                    row.appendChild(self.createPeronNameCell(rowData.sellerName, rowData.sellerTitle));
-                    row.appendChild(self.createPeronNameCell(rowData.winName, rowData.winTitle));
+                    row.appendChild(SUPER.prototype.createPersonNameCell(rowData.sellerName, rowData.sellerTitle));
+                    row.appendChild(SUPER.prototype.createPersonNameCell(rowData.winName, rowData.winTitle));
                     row.appendChild(SUPER.prototype.createCell(rowData.beginn));
                     row.appendChild(SUPER.prototype.createCell(rowData.end));
                     row.appendChild(SUPER.prototype.createCell(rowData.title));
                     row.appendChild(SUPER.prototype.createCell(rowData.unitCount));
                     row.appendChild(SUPER.prototype.createCell(rowData.minPrice.toFixed(2)));
                     row.appendChild(SUPER.prototype.createCell(rowData.bidPrice.toFixed(2)));
-                    if (rowData.winPrice === 0) {
-                        row.appendChild(SUPER.prototype.createCell(''));
-                    } else {
-                        row.appendChild(SUPER.prototype.createCell(rowData.winPrice.toFixed(2)));
-                    }
-
+                    row.appendChild(SUPER.prototype.createCell(rowData.winPrice));
 
                     document.querySelector('section.closed-bidder-auctions tbody').appendChild(row);
                 }
@@ -155,18 +148,6 @@ this.de.sb.broker = this.de.sb.broker || {};
         }
     };
 
-    /**
-     * Create table td element.
-     */
-    de.sb.broker.ClosedAuctionsController.prototype.createPeronNameCell = function (name, title) {
-        var cellWinner = document.createElement("td");
-        var nameNode = document.createTextNode(name);
-        nameNode.title = title;
-        cellWinner.title = title;
-        cellWinner.appendChild(nameNode);
-        return cellWinner;
-    };
-
     de.sb.broker.ClosedAuctionsController.prototype.initAuctionRowData = function (auction) {
 
         var auctionRowData = {};
@@ -174,7 +155,7 @@ this.de.sb.broker = this.de.sb.broker || {};
         auctionRowData.sellerTitle = auction.seller.name.given + ' ' + auction.seller.name.family + ' (' + auction.seller.contact.email + ')';
         auctionRowData.winName = '';
         auctionRowData.winTitle = '';
-        auctionRowData.winPrice = 0;
+        auctionRowData.winPrice = '';
         auctionRowData.beginn = new de.sb.util.Date().toGermanString(auction.creationTimestamp);
         auctionRowData.end = new de.sb.util.Date().toGermanString(auction.closureTimestamp);
         auctionRowData.title = auction.title;
