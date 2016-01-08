@@ -15,9 +15,6 @@ this.de.sb.broker = this.de.sb.broker || {};
     };
     de.sb.broker.ClosedAuctionsController.prototype = Object.create(SUPER.prototype);
     de.sb.broker.ClosedAuctionsController.prototype.constructor = de.sb.broker.ClosedAuctionsController;
-    de.sb.broker.ClosedAuctionsController.prototype.statusAccumulator = new de.sb.util.StatusAccumulator();
-    de.sb.broker.ClosedAuctionsController.prototype.semaphore = new de.sb.util.Semaphore(-1);
-    de.sb.broker.ClosedAuctionsController.prototype.ticketCount = 2;
 
     /**
      * Displays the associated view.
@@ -26,19 +23,26 @@ this.de.sb.broker = this.de.sb.broker || {};
         if (!this.sessionContext.user) return;
         SUPER.prototype.display.call(this);
 
+        var self = this;
+        var semaphore = new de.sb.util.Semaphore(1 - 2);
+        var statusAccumulator = new de.sb.util.StatusAccumulator();
+
         var sectionSellerAuctionElement = document.querySelector('#closed-seller-auctions-template').content.cloneNode(true).firstElementChild;
-        this.displaySellerAuctions();
+        this.displaySellerAuctions(semaphore, statusAccumulator);
         document.querySelector('main').appendChild(sectionSellerAuctionElement);
 
         var sectionBidderAuctionElement = document.querySelector('#closed-bidder-auctions-template').content.cloneNode(true).firstElementChild;
-        this.displayBidderAuctions();
+        this.displayBidderAuctions(semaphore, statusAccumulator);
         document.querySelector('main').appendChild(sectionBidderAuctionElement);
+        semaphore.acquire(function () {
+            self.displayStatus(statusAccumulator.status, statusAccumulator.statusText);
+        })
     };
 
     /**
      * Returns seller auctions.
      */
-    de.sb.broker.ClosedAuctionsController.prototype.displaySellerAuctions = function () {
+    de.sb.broker.ClosedAuctionsController.prototype.displaySellerAuctions = function (semaphore, statusAccumulator) {
 
         var self = this;
         var url = '/services/people/' + this.sessionContext.user.identity + '/auctions?seller=true&closed=true';
@@ -52,29 +56,28 @@ this.de.sb.broker = this.de.sb.broker || {};
                     var winnerBid = self.getWinnerBid(auction.bids);
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
+                        rowData.winTitle = winnerBid.bidder.name.given + ' ' + winnerBid.bidder.name.family + ' (' + winnerBid.bidder.contact.email + ')';
                         rowData.winPrice = winnerBid.price / 100;
-                        //rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
                     }
 
                     var row = document.createElement('tr');
-                    row.appendChild(SUPER.prototype.createCell(rowData.winName));
+                    row.appendChild(self.createPeronNameCell(rowData.winName, rowData.winTitle));
                     row.appendChild(SUPER.prototype.createCell(rowData.beginn));
                     row.appendChild(SUPER.prototype.createCell(rowData.end));
                     row.appendChild(SUPER.prototype.createCell(rowData.title));
                     row.appendChild(SUPER.prototype.createCell(rowData.unitCount));
                     row.appendChild(SUPER.prototype.createCell(rowData.minPrice.toFixed(2)));
-                    row.appendChild(SUPER.prototype.createCell(rowData.winPrice.toFixed(2)));
+                    if (rowData.winPrice === 0) {
+                        row.appendChild(SUPER.prototype.createCell(''));
+                    } else {
+                        row.appendChild(SUPER.prototype.createCell(rowData.winPrice.toFixed(2)));
+                    }
 
                     document.querySelector('section.closed-seller-auctions tbody').appendChild(row);
                 }
             }
-            self.statusAccumulator.offer(request.status, request.statusText);
-            self.ticketCount--;
-            if (self.ticketCount == 0) {
-                self.displayStatus(self.statusAccumulator.status, self.statusAccumulator.statusText)
-            }
-            //self.semaphore.release();
-            //self.semaphore.acquire(self.executeDisplayStatus);
+            statusAccumulator.offer(request.status, request.statusText);
+            semaphore.release();
         });
     };
 
@@ -82,7 +85,7 @@ this.de.sb.broker = this.de.sb.broker || {};
     /**
      * Display bidder auctions.
      */
-    de.sb.broker.ClosedAuctionsController.prototype.displayBidderAuctions = function () {
+    de.sb.broker.ClosedAuctionsController.prototype.displayBidderAuctions = function (semaphore, statusAccumulator) {
 
         var url = '/services/people/' + this.sessionContext.user.identity + '/auctions?seller=false&closed=true';
         var self = this;
@@ -97,43 +100,36 @@ this.de.sb.broker = this.de.sb.broker || {};
                     if (winnerBid) {
                         rowData.winName = winnerBid.bidder.name.given;
                         rowData.winPrice = winnerBid.price / 100;
-                        //rowData.end = new de.sb.util.Date().toGermanString(winnerBid.creationTimestamp);
+                        rowData.winTitle = winnerBid.bidder.name.given + ' ' + winnerBid.bidder.name.family + ' (' + winnerBid.bidder.contact.email + ')';
                     }
 
                     var ownerBid = self.getOwnerBid(auction.bids, self.sessionContext.user.alias);
                     rowData.bidPrice = ownerBid.price / 100;
 
                     var row = document.createElement('tr');
-                    row.appendChild(SUPER.prototype.createCell(rowData.sellerName));
-                    row.appendChild(SUPER.prototype.createCell(rowData.winName));
+                    row.appendChild(self.createPeronNameCell(rowData.sellerName, rowData.sellerTitle));
+                    row.appendChild(self.createPeronNameCell(rowData.winName, rowData.winTitle));
                     row.appendChild(SUPER.prototype.createCell(rowData.beginn));
                     row.appendChild(SUPER.prototype.createCell(rowData.end));
                     row.appendChild(SUPER.prototype.createCell(rowData.title));
                     row.appendChild(SUPER.prototype.createCell(rowData.unitCount));
                     row.appendChild(SUPER.prototype.createCell(rowData.minPrice.toFixed(2)));
                     row.appendChild(SUPER.prototype.createCell(rowData.bidPrice.toFixed(2)));
-                    row.appendChild(SUPER.prototype.createCell(rowData.winPrice.toFixed(2)));
+                    if (rowData.winPrice === 0) {
+                        row.appendChild(SUPER.prototype.createCell(''));
+                    } else {
+                        row.appendChild(SUPER.prototype.createCell(rowData.winPrice.toFixed(2)));
+                    }
+
 
                     document.querySelector('section.closed-bidder-auctions tbody').appendChild(row);
                 }
             }
 
-            self.statusAccumulator.offer(request.status, request.statusText);
-            self.ticketCount--;
-            if (self.ticketCount == 0) {
-                self.displayStatus(self.statusAccumulator.status, self.statusAccumulator.statusText)
-            }
-            //self.semaphore.release();
-            //self.semaphore.acquire(self.executeDisplayStatus);
+            statusAccumulator.offer(request.status, request.statusText);
+            semaphore.release();
         });
     };
-
-
-    de.sb.broker.ClosedAuctionsController.prototype.executeDisplayStatus = function () {
-        var self = this;
-        self.displayStatus(self.statusAccumulator.status, self.statusAccumulator.text)
-    };
-
 
     de.sb.broker.ClosedAuctionsController.prototype.getOwnerBid = function (bids, alias) {
         if (bids) {
@@ -159,19 +155,32 @@ this.de.sb.broker = this.de.sb.broker || {};
         }
     };
 
+    /**
+     * Create table td element.
+     */
+    de.sb.broker.ClosedAuctionsController.prototype.createPeronNameCell = function (name, title) {
+        var cellWinner = document.createElement("td");
+        var nameNode = document.createTextNode(name);
+        nameNode.title = title;
+        cellWinner.title = title;
+        cellWinner.appendChild(nameNode);
+        return cellWinner;
+    };
+
     de.sb.broker.ClosedAuctionsController.prototype.initAuctionRowData = function (auction) {
 
         var auctionRowData = {};
         auctionRowData.sellerName = auction.seller.name.given;
+        auctionRowData.sellerTitle = auction.seller.name.given + ' ' + auction.seller.name.family + ' (' + auction.seller.contact.email + ')';
         auctionRowData.winName = '';
+        auctionRowData.winTitle = '';
         auctionRowData.winPrice = 0;
         auctionRowData.beginn = new de.sb.util.Date().toGermanString(auction.creationTimestamp);
-        //auctionRowData.end = '';
         auctionRowData.end = new de.sb.util.Date().toGermanString(auction.closureTimestamp);
         auctionRowData.title = auction.title;
         auctionRowData.unitCount = auction.unitCount;
         auctionRowData.minPrice = auction.askingPrice / 100;
-        auctionRowData.bidPrice = 0;
+        auctionRowData.bidPrice = '';
 
         return auctionRowData;
     };
