@@ -15,6 +15,9 @@ this.de.sb.broker = this.de.sb.broker || {};
     };
     de.sb.broker.ClosedAuctionsController.prototype = Object.create(SUPER.prototype);
     de.sb.broker.ClosedAuctionsController.prototype.constructor = de.sb.broker.ClosedAuctionsController;
+    de.sb.broker.ClosedAuctionsController.prototype.statusAccumulator = new de.sb.util.StatusAccumulator();
+    de.sb.broker.ClosedAuctionsController.prototype.semaphore = new de.sb.util.Semaphore(-1);
+    de.sb.broker.ClosedAuctionsController.prototype.ticketCount = 2;
 
     /**
      * Displays the associated view.
@@ -22,7 +25,6 @@ this.de.sb.broker = this.de.sb.broker || {};
     de.sb.broker.ClosedAuctionsController.prototype.display = function () {
         if (!this.sessionContext.user) return;
         SUPER.prototype.display.call(this);
-        this.displayStatus(200, 'OK');
 
         var sectionSellerAuctionElement = document.querySelector('#closed-seller-auctions-template').content.cloneNode(true).firstElementChild;
         this.displaySellerAuctions();
@@ -41,7 +43,6 @@ this.de.sb.broker = this.de.sb.broker || {};
         var self = this;
         var url = '/services/people/' + this.sessionContext.user.identity + '/auctions?seller=true&closed=true';
         de.sb.util.AJAX.invoke(url, 'GET', {"Accept": 'application/json'}, null, this.sessionContext, function (request) {
-            self.displayStatus(request.status, request.statusText);
             if (request.status === 200) {
                 var auctions = JSON.parse(request.responseText);
                 for (var auctionIndex = 0; auctionIndex < auctions.length; ++auctionIndex) {
@@ -67,6 +68,13 @@ this.de.sb.broker = this.de.sb.broker || {};
                     document.querySelector('section.closed-seller-auctions tbody').appendChild(row);
                 }
             }
+            self.statusAccumulator.offer(request.status, request.statusText);
+            self.ticketCount--;
+            if (self.ticketCount == 0) {
+                self.displayStatus(self.statusAccumulator.status, self.statusAccumulator.statusText)
+            }
+            //self.semaphore.release();
+            //self.semaphore.acquire(self.executeDisplayStatus);
         });
     };
 
@@ -79,7 +87,6 @@ this.de.sb.broker = this.de.sb.broker || {};
         var url = '/services/people/' + this.sessionContext.user.identity + '/auctions?seller=false&closed=true';
         var self = this;
         de.sb.util.AJAX.invoke(url, 'GET', {"Accept": 'application/json'}, null, this.sessionContext, function (request) {
-            self.displayStatus(request.status, request.statusText);
             if (request.status === 200) {
                 var auctions = JSON.parse(request.responseText);
                 for (var auctionIndex = 0; auctionIndex < auctions.length; ++auctionIndex) {
@@ -110,8 +117,23 @@ this.de.sb.broker = this.de.sb.broker || {};
                     document.querySelector('section.closed-bidder-auctions tbody').appendChild(row);
                 }
             }
+
+            self.statusAccumulator.offer(request.status, request.statusText);
+            self.ticketCount--;
+            if (self.ticketCount == 0) {
+                self.displayStatus(self.statusAccumulator.status, self.statusAccumulator.statusText)
+            }
+            //self.semaphore.release();
+            //self.semaphore.acquire(self.executeDisplayStatus);
         });
     };
+
+
+    de.sb.broker.ClosedAuctionsController.prototype.executeDisplayStatus = function () {
+        var self = this;
+        self.displayStatus(self.statusAccumulator.status, self.statusAccumulator.text)
+    };
+
 
     de.sb.broker.ClosedAuctionsController.prototype.getOwnerBid = function (bids, alias) {
         if (bids) {
