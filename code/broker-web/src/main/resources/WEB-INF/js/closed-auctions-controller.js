@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 this.de = this.de || {};
 this.de.sb = this.de.sb || {};
@@ -62,7 +62,7 @@ this.de.sb.broker = this.de.sb.broker || {};
                     }
 
                     var row = document.createElement('tr');
-                    row.appendChild(SUPER.prototype.createPersonNameCell(rowData.winName, rowData.winTitle));
+                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.winName, rowData.winTitle));
                     row.appendChild(SUPER.prototype.createCell(rowData.beginn));
                     row.appendChild(SUPER.prototype.createCell(rowData.end));
                     row.appendChild(SUPER.prototype.createCell(rowData.title));
@@ -105,8 +105,8 @@ this.de.sb.broker = this.de.sb.broker || {};
                     rowData.bidPrice = ownerBid.price / 100;
 
                     var row = document.createElement('tr');
-                    row.appendChild(SUPER.prototype.createPersonNameCell(rowData.sellerName, rowData.sellerTitle));
-                    row.appendChild(SUPER.prototype.createPersonNameCell(rowData.winName, rowData.winTitle));
+                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.sellerName, rowData.sellerTitle));
+                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.winName, rowData.winTitle));
                     row.appendChild(SUPER.prototype.createCell(rowData.beginn));
                     row.appendChild(SUPER.prototype.createCell(rowData.end));
                     row.appendChild(SUPER.prototype.createCell(rowData.title));

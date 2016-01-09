@@ -78,7 +78,7 @@ public class AuctionService {
             @QueryParam("description") String description,
             @QueryParam("sellerReference") Long sellerReference,
             @QueryParam("closed") Boolean closed) {
-        LifeCycleProvider.authenticate(authentication);
+        Person requester = LifeCycleProvider.authenticate(authentication);
         final EntityManager em = LifeCycleProvider.brokerManager();
         Query query = em.createQuery(AUCTION_CRITERIA);
         query.setParameter("titleFragment", titleFragment);
@@ -104,6 +104,15 @@ public class AuctionService {
             Auction auction = em.find(Auction.class, identity);
             auction = FilterUtility.filterClosed(auction, closed);
             if (auction != null) {
+                boolean isNotSeller = auction.getSeller().compareTo(requester) != 0;
+                if (isNotSeller) {
+                    auction.setOwnerBidPrice(0L);
+                    Bid requesterBid = auction.getBid(requester);
+                    if (requesterBid != null) {
+                        auction.setOwnerBidPrice(requesterBid.getPrice());
+                    }
+                }
+
                 result.add(auction);
             }
         }
@@ -114,7 +123,6 @@ public class AuctionService {
                 new Auction.XmlSellerAsEntityFilter.Literal()
         };
         return Response.ok().entity(wrapper, filterAnnotations).build();
-
     }
 
     @PUT
@@ -126,6 +134,7 @@ public class AuctionService {
         boolean persistMode = template.getIdentity() == null;
         final EntityManager em = LifeCycleProvider.brokerManager();
         final Person requester = LifeCycleProvider.authenticate(authentication);
+
         try {
             Auction auction;
             if (persistMode) {
@@ -146,6 +155,7 @@ public class AuctionService {
             }
 
             auction.setAskingPrice(template.getAskingPrice());
+            auction.setCreationTimestamp(template.getCreationTimestamp());
             auction.setClosureTimestamp(template.getClosureTimestamp());
             auction.setDescription(template.getDescription());
             auction.setTitle(template.getTitle());
@@ -171,7 +181,6 @@ public class AuctionService {
             throw new ClientErrorException(Response.Status.CONFLICT);
         }
     }
-
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -219,18 +228,27 @@ public class AuctionService {
                           @PathParam("identity") final long identity,
                           @Min(0) long price) {
         Person requester = LifeCycleProvider.authenticate(authentication);
+        boolean isRemoveMode = price == 0;
         final EntityManager em = LifeCycleProvider.brokerManager();
         Auction auction = em.find(Auction.class, identity);
         if (auction == null) {
             throw new NotFoundException();
         }
-        if (auction.isClosed() || auction.isSealed()) {
+        if (auction.isClosed()) {
+            throw new ClientErrorException(Response.Status.CONFLICT);
+        }
+
+        if (auction.getSeller().compareTo(requester) == 0) {
+            //requester can not bid own auction.
+            throw new ClientErrorException(Response.Status.CONFLICT);
+        }
+
+        if (!isRemoveMode && auction.getAskingPrice() >= price) {
             throw new ClientErrorException(Response.Status.CONFLICT);
         }
 
         Bid bid = auction.getBid(requester);
         boolean persistMode = bid == null;
-        boolean isRemoveMode = price == 0;
 
         if (persistMode) {
             em.persist(new Bid(auction, requester, price));

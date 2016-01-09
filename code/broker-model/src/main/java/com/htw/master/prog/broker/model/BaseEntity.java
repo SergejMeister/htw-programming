@@ -85,6 +85,10 @@ public abstract class BaseEntity implements Comparable, Serializable {
         return creationTimestamp;
     }
 
+    public void setCreationTimestamp(Long creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
+    }
+
     public Date getCreationDate() {
         return new Date(creationTimestamp);
     }

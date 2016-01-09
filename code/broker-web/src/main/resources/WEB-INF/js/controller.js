@@ -2,7 +2,7 @@
  * de.sb.broker.Controller: abstract controller.
  * Copyright (c) 2013-2015 Sascha Baumeister
  */
-"use strict";
+'use strict';
 
 this.de = this.de || {};
 this.de.sb = this.de.sb || {};
@@ -25,17 +25,17 @@ this.de.sb.broker = this.de.sb.broker || {};
      * children.
      */
     de.sb.broker.Controller.prototype.display = function () {
-        var menuElements = document.querySelectorAll("nav li");
+        var menuElements = document.querySelectorAll('nav li');
 
         for (var viewOrdinal = 0; viewOrdinal < menuElements.length; ++viewOrdinal) {
             if (viewOrdinal == this.viewOrdinal) {
-                menuElements[viewOrdinal].classList.add("selected");
+                menuElements[viewOrdinal].classList.add('selected');
             } else {
-                menuElements[viewOrdinal].classList.remove("selected");
+                menuElements[viewOrdinal].classList.remove('selected');
             }
         }
 
-        var mainElement = document.querySelector("main");
+        var mainElement = document.querySelector('main');
         while (mainElement.lastChild) {
             mainElement.removeChild(mainElement.lastChild);
         }
@@ -45,7 +45,7 @@ this.de.sb.broker = this.de.sb.broker || {};
      * Create table td element.
      */
     de.sb.broker.Controller.prototype.createCell = function (text) {
-        var cellWinner = document.createElement("td");
+        var cellWinner = document.createElement('td');
         cellWinner.appendChild(document.createTextNode(text));
         return cellWinner;
     };
@@ -53,9 +53,9 @@ this.de.sb.broker = this.de.sb.broker || {};
     /**
      * Create table td element.
      */
-    de.sb.broker.Controller.prototype.createPersonNameCell = function (name, title) {
-        var cellWinner = document.createElement("td");
-        var nameNode = document.createTextNode(name);
+    de.sb.broker.Controller.prototype.createValueTitleCell = function (value, title) {
+        var cellWinner = document.createElement('td');
+        var nameNode = document.createTextNode(value);
         cellWinner.title = title;
         cellWinner.appendChild(nameNode);
         return cellWinner;
@@ -68,19 +68,19 @@ this.de.sb.broker = this.de.sb.broker || {};
      * @param message {String} the status message
      */
     de.sb.broker.Controller.prototype.displayStatus = function (code, message) {
-        var outputElement = document.querySelector("body > footer output");
-        outputElement.value = code + " " + (code === 0 ? "unreachable" : message);
+        var outputElement = document.querySelector('body > footer output');
+        outputElement.value = code + ' ' + (code === 0 ? 'unreachable' : message);
 
         switch (Math.floor(0.01 * code)) {
             case 1:
             case 2:
-                outputElement.className = "success";
+                outputElement.className = 'success';
                 break;
             case 3:
-                outputElement.className = "warning";
+                outputElement.className = 'warning';
                 break;
             default:
-                outputElement.className = "error";
+                outputElement.className = 'error';
                 break;
         }
     }

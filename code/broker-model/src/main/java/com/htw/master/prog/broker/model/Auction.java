@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -57,7 +58,7 @@ public class Auction extends BaseEntity {
     @XmlElement
     @Min(1)
     @Column(nullable = false, updatable = true)
-    private double askingPrice;
+    private long askingPrice;
 
     @XmlElement
     @NotNull
@@ -75,6 +76,10 @@ public class Auction extends BaseEntity {
     @JoinColumn(name = "sellerReference", nullable = false, updatable = false, insertable = true)
     private Person seller;
 
+    @XmlElement
+    @Transient
+    private Long ownerBidPrice;
+
     public Auction() {
         this(null);
     }
@@ -83,8 +88,10 @@ public class Auction extends BaseEntity {
         this.bids = new ArrayList<>();
         this.seller = seller;
         setUnitCount(1);
-        setAskingPrice(1.0);
-        Instant tomorrow = LocalDateTime.now().plusDays(1).atZone(ZoneId.systemDefault()).toInstant();
+        setAskingPrice(1);
+        LocalDateTime today = LocalDateTime.now();
+        setCreationTimestamp(Date.from(today.atZone(ZoneId.systemDefault()).toInstant()).getTime());
+        Instant tomorrow = today.plusDays(1).atZone(ZoneId.systemDefault()).toInstant();
         setClosureTimestamp(Date.from(tomorrow));
     }
 
@@ -104,11 +111,11 @@ public class Auction extends BaseEntity {
         this.unitCount = unitCount;
     }
 
-    public double getAskingPrice() {
+    public long getAskingPrice() {
         return askingPrice;
     }
 
-    public void setAskingPrice(double askingPrice) {
+    public void setAskingPrice(long askingPrice) {
         this.askingPrice = askingPrice;
     }
 
@@ -166,6 +173,14 @@ public class Auction extends BaseEntity {
     @XmlElement(name = "sealed")
     public boolean isSealed() {
         return 0 < bids.size() || isClosed();
+    }
+
+    public Long getOwnerBidPrice() {
+        return ownerBidPrice;
+    }
+
+    public void setOwnerBidPrice(Long ownerBidPrice) {
+        this.ownerBidPrice = ownerBidPrice;
     }
 
     /**

@@ -197,7 +197,6 @@ this.de.sb.util = this.de.sb.util || {};
     };
 
     de.sb.util.Date = function () {
-
         this.toGermanString = function (milliseconds) {
             return new Date(parseInt(milliseconds)).toLocaleDateString('de-DE', {
                 year: 'numeric',
@@ -205,7 +204,12 @@ this.de.sb.util = this.de.sb.util || {};
                 day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit'
-            }).replace(/\./g, '/');
+            }).replace(/\./g, '-');
+        };
+
+        this.germanStringToTimestamp = function (germanDate) {
+            var dateArr = germanDate.split('-');
+            return new Date(dateArr[1] + "-" + dateArr[0] + "-" + dateArr[2]).getTime();
         }
     };
 }());

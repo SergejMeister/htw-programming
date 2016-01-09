@@ -64,12 +64,13 @@ public class AuctionServiceTest extends ServiceTest {
         Auction template = new Auction();
         template.setTitle("testAuction");
         template.setUnitCount(2);
-        template.setAskingPrice(12.2);
+        template.setAskingPrice(1220L);
         template.setDescription("Das ist ein test");
+        template.setOwnerBidPrice(1L);
 
         WebTarget webTarget = newWebTarget("ines", "ines");
         Entity<Auction> auctionEntity = Entity.entity(template, MediaType.APPLICATION_XML_TYPE);
-        Response response = webTarget.path(AUCTION_URL).request().put(auctionEntity);
+        Response response = webTarget.path(AUCTION_URL).request(MediaType.TEXT_PLAIN).put(auctionEntity);
         Assert.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
 
         long createdIdentity = response.readEntity(Long.class);
@@ -104,7 +105,7 @@ public class AuctionServiceTest extends ServiceTest {
         Auction template = new Auction();
         template.setTitle("testAuction");
         template.setUnitCount(2);
-        template.setAskingPrice(12.2);
+        template.setAskingPrice(1220);
         template.setDescription("Das ist ein test");
 
         WebTarget webTarget = newWebTarget("ines", "ines");
