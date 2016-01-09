@@ -71,7 +71,7 @@ public class Auction extends BaseEntity {
     @Size(min = 1, max = 8189)
     private String description;
 
-    @NotNull
+    //@NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sellerReference", nullable = false, updatable = false, insertable = true)
     private Person seller;

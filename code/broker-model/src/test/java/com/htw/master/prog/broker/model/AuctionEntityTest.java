@@ -31,7 +31,7 @@ public class AuctionEntityTest extends EntityTest {
         Set<ConstraintViolation<Auction>> constraintViolations = getEntityValidatorFactory().getValidator()
             .validate(emptyAuction);
 
-        Assert.assertEquals(3, constraintViolations.size());
+        Assert.assertEquals(2, constraintViolations.size());
 
         ConstraintViolation<Auction> titleNullConstraint = findByField(constraintViolations, "title");
         Assert.assertNotNull(titleNullConstraint);
@@ -41,9 +41,9 @@ public class AuctionEntityTest extends EntityTest {
         Assert.assertNotNull(descriptionNullConstraint);
         Assert.assertEquals("may not be null", descriptionNullConstraint.getMessage());
 
-        ConstraintViolation<Auction> sellerNullConstraint = findByField(constraintViolations, "seller");
-        Assert.assertNotNull(sellerNullConstraint);
-        Assert.assertEquals("may not be null", sellerNullConstraint.getMessage());
+//        ConstraintViolation<Auction> sellerNullConstraint = findByField(constraintViolations, "seller");
+//        Assert.assertNotNull(sellerNullConstraint);
+//        Assert.assertEquals("may not be null", sellerNullConstraint.getMessage());
 
         emptyAuction = EntityTestUtility.createDefaultAction();
         constraintViolations.clear();

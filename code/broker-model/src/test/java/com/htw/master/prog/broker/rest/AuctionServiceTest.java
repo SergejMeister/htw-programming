@@ -83,7 +83,7 @@ public class AuctionServiceTest extends ServiceTest {
         Auction auction = response.readEntity(Auction.class);
         Assert.assertEquals("testAuction", auction.getTitle());
         Assert.assertEquals(2, auction.getUnitCount());
-        Assert.assertTrue(12.2 == auction.getAskingPrice());
+        Assert.assertTrue(1220L == auction.getAskingPrice());
 
         //Update
         auction.setTitle("updateTitle");
@@ -116,7 +116,7 @@ public class AuctionServiceTest extends ServiceTest {
         getWasteBasket().add(createdIdentity);
 
         webTarget = newWebTarget("sascha", "sascha");
-        long price = 15 ;
+        long price = 1500 ;
         Entity<Long> priceEntity = Entity.entity(price, MediaType.TEXT_PLAIN);
         response = webTarget.path(AUCTION_URL + "/" + createdIdentity + "/bid").request().post(priceEntity);
         Assert.assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
