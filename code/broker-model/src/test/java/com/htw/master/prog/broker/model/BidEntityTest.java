@@ -8,12 +8,14 @@ import com.htw.master.prog.broker.dao.beans.BidDaoBean;
 import com.htw.master.prog.broker.dao.beans.PersonDaoBean;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import javax.validation.ConstraintViolation;
 import java.util.Set;
 
+@Ignore
 public class BidEntityTest extends EntityTest {
 
     private static AuctionDao auctionDao;

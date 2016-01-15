@@ -5,12 +5,14 @@ import com.htw.master.prog.broker.dao.PersonDao;
 import com.htw.master.prog.broker.dao.beans.AuctionDaoBean;
 import com.htw.master.prog.broker.dao.beans.PersonDaoBean;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import javax.validation.ConstraintViolation;
 import java.util.Set;
 
+@Ignore
 public class AuctionEntityTest extends EntityTest {
 
     public static ConstraintViolation<Auction> findByField(Set<ConstraintViolation<Auction>> constraintViolations,

@@ -40,50 +40,16 @@ this.de.sb.broker = this.de.sb.broker || {};
     de.sb.broker.OpenAuctionsController.prototype.displayOpenAuctions = function () {
         var self = this;
         var url = '/services/auctions?closed=false';
+        //var url = '/services/auctions';
         de.sb.util.AJAX.invoke(url, 'GET', {"Accept": 'application/json'}, null, this.sessionContext, function (request) {
             if (request.status === 200) {
                 var auctions = JSON.parse(request.responseText);
+                var rowTemplate = self.createRowTemplate();
 
-                //TODO ask how it works with outputs!!!
-                //var rowTemplate = document.createElement('tr');
-                //for (var i = 0; i < 7; i++) {
-                //    var td = document.createElement('td');
-                //    var output = document.createElement('output');
-                //    td.appendChild(output);
-                //    rowTemplate.appendChild(td);
-                //}
-                //
-                //for (var auctionIndex = 0; auctionIndex < auctions.length; auctionIndex++) {
-                //    var outputs = rowTemplate.querySelectorAll('output');
-                //    var auction = auctions[auctionIndex];
-                //    var rowData = self.initAuctionRowData(auction);
-                //    outputs[0].value = rowData.sellerName;
-                //    outputs[0].title = rowData.sellerTitle;
-                //    outputs[1].value = rowData.beginn;
-                //    outputs[2].value = rowData.end;
-                //    outputs[3].value = rowData.title;
-                //    outputs[3].title = rowData.titleDescription;
-                //    outputs[4].value = rowData.unitCount;
-                //    outputs[5].value = rowData.minPrice.toFixed(2);
-                //    outputs[6].value = '';
-                //
-                //    document.querySelector('section.open-auctions tbody').appendChild(rowTemplate);
-                //}
-
-                for (var auctionIndex = 0; auctionIndex < auctions.length; ++auctionIndex) {
+                for (var auctionIndex = 0; auctionIndex < auctions.length; auctionIndex++) {
+                    var row = rowTemplate.cloneNode(true);
                     var auction = auctions[auctionIndex];
-                    var rowData = self.initAuctionRowData(auction);
-
-                    var row = document.createElement('tr');
-                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.sellerName, rowData.sellerTitle));
-                    row.appendChild(SUPER.prototype.createCell(rowData.beginn));
-                    row.appendChild(SUPER.prototype.createCell(rowData.end));
-                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.title, rowData.titleDescription));
-                    row.appendChild(SUPER.prototype.createCell(rowData.unitCount));
-                    row.appendChild(SUPER.prototype.createCell(rowData.minPrice.toFixed(2)));
-                    row.appendChild(self.createBidCell(auction));
-
-                    document.querySelector('section.open-auctions tbody').appendChild(row);
+                    self.initRow(row, auction);
                 }
             }
 
@@ -117,11 +83,73 @@ this.de.sb.broker = this.de.sb.broker || {};
             activeElements[1].value = new de.sb.util.Date().toGermanString(now.getTime());
         }
 
-        var sendButton = auctionFormTemplate.querySelector('section.auction-form button');
-        sendButton.onclick = function () {
+        var buttons = auctionFormTemplate.querySelectorAll('section.auction-form button');
+        buttons[0].onclick = function () {
             self.persistAuction(auction);
         };
+        buttons[1].onclick = function () {
+            var auctionForm = document.querySelector('section.auction-form');
+            document.querySelector('main').removeChild(auctionForm);
+        };
         document.querySelector('main').appendChild(auctionFormTemplate);
+    };
+
+    /**
+     * Create table td element.
+     */
+    de.sb.broker.OpenAuctionsController.prototype.createRowTemplate = function () {
+        var self = this;
+        var rowTemplate = document.createElement('tr');
+        var lastCellIndex = 6;
+        for (var i = 0; i < 7; i++) {
+            var td = document.createElement('td');
+            if (i != lastCellIndex) {
+                var output = document.createElement('output');
+                td.appendChild(output);
+            } else {
+                var input = document.createElement('input');
+                td.appendChild(input);
+            }
+            rowTemplate.appendChild(td);
+        }
+
+        return rowTemplate;
+    };
+
+    /**
+     * Create table td element.
+     */
+    de.sb.broker.OpenAuctionsController.prototype.initRow = function (row, auction) {
+        var self = this;
+        var outputs = row.querySelectorAll('output');
+        var rowData = self.initAuctionRowData(auction);
+        outputs[0].value = rowData.sellerName;
+        outputs[0].title = rowData.sellerTitle;
+        outputs[1].value = rowData.beginn;
+        outputs[2].value = rowData.end;
+        outputs[3].value = rowData.title;
+        outputs[3].title = rowData.titleDescription;
+        outputs[4].value = rowData.unitCount;
+        outputs[5].value = rowData.minPrice.toFixed(2);
+
+        var input = row.querySelectorAll('input');
+        if (auction.seller.identity == self.sessionContext.user.identity) {
+            input[0].type = 'button';
+            input[0].value = 'edit';
+            input[0].disabled = auction.sealed;
+            input[0].onclick = function () {
+                self.displayAuction(auction);
+            };
+        } else {
+            input[0].type = 'number';
+            input[0].value = (auction.ownerBidPrice / 100).toFixed(2);
+            input[0].step = 0.01;
+            input[0].onchange = function () {
+                self.updateBid(auction.identity, Math.round(this.value * 100));
+            };
+        }
+
+        document.querySelector('section.open-auctions tbody').appendChild(row);
     };
 
     /**
@@ -147,53 +175,19 @@ this.de.sb.broker = this.de.sb.broker || {};
         var body = JSON.stringify(auction);
         de.sb.util.AJAX.invoke('/services/auctions', 'PUT', {"Content-Type": 'application/json'}, body, this.sessionContext, function (response) {
             if (response.status === 200) {
-                if (persistMode) {
-                    auction.seller = self.sessionContext.user;
-                    var rowData = self.initAuctionRowData(auction);
-
-                    var row = document.createElement('tr');
-                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.sellerName, rowData.sellerTitle));
-                    row.appendChild(SUPER.prototype.createCell(rowData.beginn));
-                    row.appendChild(SUPER.prototype.createCell(rowData.end));
-                    row.appendChild(SUPER.prototype.createValueTitleCell(rowData.title, rowData.titleDescription));
-                    row.appendChild(SUPER.prototype.createCell(rowData.unitCount));
-                    row.appendChild(SUPER.prototype.createCell(rowData.minPrice.toFixed(2)));
-                    row.appendChild(self.createBidCell(auction));
-
-                    document.querySelector('section.open-auctions tbody').appendChild(row);
-                } else {
-                    //TODO what is a good solution to replace row with new data!!!
-                }
+                self.display();
+                //if (persistMode) {
+                //    auction.seller = self.sessionContext.user;
+                //    var rowTemplate = self.createRowTemplate();
+                //    var row = rowTemplate.cloneNode(true);
+                //    self.initRow(row, auction);
+                //} else {
+                //    //TODO what is a good solution to replace row with new data!!!
+                //}
             }
-            document.querySelector('main').removeChild(auctionForm);
-            self.displayStatus(response.status, response.statusText);
+            //document.querySelector('main').removeChild(auctionForm);
+            //self.displayStatus(response.status, response.statusText);
         });
-    };
-
-    /**
-     * Create table td element.
-     */
-    de.sb.broker.OpenAuctionsController.prototype.createBidCell = function (auction) {
-        var self = this;
-        var cellBid = document.createElement('td');
-        var input = document.createElement('input');
-        if (auction.seller.identity == this.sessionContext.user.identity) {
-            input.type = 'button';
-            input.value = 'edit';
-            input.disabled = auction.sealed;
-            input.onclick = function () {
-                self.displayAuction(auction);
-            };
-        } else {
-            input.type = 'number';
-            input.value = (auction.ownerBidPrice / 100).toFixed(2);
-            input.step = 0.01;
-            input.onchange = function () {
-                self.updateBid(auction.identity, Math.round(this.value * 100));
-            };
-        }
-        cellBid.appendChild(input);
-        return cellBid;
     };
 
     /**
@@ -210,6 +204,7 @@ this.de.sb.broker = this.de.sb.broker || {};
     de.sb.broker.OpenAuctionsController.prototype.initAuctionRowData = function (auction) {
 
         var auctionRowData = {};
+        auctionRowData.id = auction.identity;
         auctionRowData.sellerName = auction.seller.name.given;
         auctionRowData.sellerTitle = auction.seller.name.given + ' ' + auction.seller.name.family + ' (' + auction.seller.contact.email + ')';
         //TODO: Maybe exists a better solution to handle date and currency format!!!
