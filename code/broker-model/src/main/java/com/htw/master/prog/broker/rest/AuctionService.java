@@ -128,9 +128,16 @@ public class AuctionService {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces(MediaType.TEXT_PLAIN)
+    @Valid
     public long createOrUpdateAuction(@HeaderParam("Authorization") final String authentication,
                                       @NotNull @Valid final Auction template) {
         Person authorizedPerson = LifeCycleProvider.authenticate(authentication);
+        if (template.getTitle() == null || template.getTitle().isEmpty() ||
+                template.getDescription() == null || template.getDescription().isEmpty() ||
+                template.getAskingPrice() <= 0) {
+            throw new ClientErrorException(Response.Status.CONFLICT);
+        }
+
         boolean persistMode = template.getIdentity() == null;
         final EntityManager em = LifeCycleProvider.brokerManager();
         final Person requester = LifeCycleProvider.authenticate(authentication);
@@ -228,6 +235,10 @@ public class AuctionService {
                           @PathParam("identity") final long identity,
                           @Min(0) long price) {
         Person requester = LifeCycleProvider.authenticate(authentication);
+        if (price <= 0) {
+            throw new ClientErrorException(Response.Status.CONFLICT);
+        }
+
         boolean isRemoveMode = price == 0;
         final EntityManager em = LifeCycleProvider.brokerManager();
         Auction auction = em.find(Auction.class, identity);

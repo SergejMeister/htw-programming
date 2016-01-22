@@ -157,12 +157,10 @@ this.de.sb.broker = this.de.sb.broker || {};
      */
     de.sb.broker.OpenAuctionsController.prototype.persistAuction = function (auction) {
         var auctionForm = document.querySelector('section.auction-form');
-        var activeElements = auctionForm.querySelectorAll('input,textarea');
+        var activeElements = auctionForm.querySelectorAll('input, textarea');
 
-        var persistMode = false;
         if (!auction) {
             auction = {};
-            persistMode = true;
         }
         auction.creationTimestamp = new de.sb.util.Date().germanStringToTimestamp(activeElements[0].value.trim());
         auction.closureTimestamp = new de.sb.util.Date().germanStringToTimestamp(activeElements[1].value.trim());
@@ -176,17 +174,9 @@ this.de.sb.broker = this.de.sb.broker || {};
         de.sb.util.AJAX.invoke('/services/auctions', 'PUT', {"Content-Type": 'application/json'}, body, this.sessionContext, function (response) {
             if (response.status === 200) {
                 self.display();
-                //if (persistMode) {
-                //    auction.seller = self.sessionContext.user;
-                //    var rowTemplate = self.createRowTemplate();
-                //    var row = rowTemplate.cloneNode(true);
-                //    self.initRow(row, auction);
-                //} else {
-                //    //TODO what is a good solution to replace row with new data!!!
-                //}
+            }else{
+                self.displayStatus(response.status, response.statusText)
             }
-            //document.querySelector('main').removeChild(auctionForm);
-            //self.displayStatus(response.status, response.statusText);
         });
     };
 
